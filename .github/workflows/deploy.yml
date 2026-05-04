@@ -12,17 +12,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          port: 22
-          sftp_only: true
-          local_path: './*'
-          remote_path: ${{ secrets.FTP_REMOTE_DIR }}
-          # On ne supprime pas les fichiers distants pour éviter
-          # tout drame en cas de mauvais chemin distant
-          delete_remote_files: false
-          exclude: '.git, .github, .gitignore, README.md, node_modules, .DS_Store, .vscode'
+          protocol: ftp
+          port: 21
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          # Synchro incrémentale : seuls les fichiers modifiés sont uploadés
+          # (l'action garde un manifeste .ftp-deploy-sync-state.json côté serveur)
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/node_modules/**
+            **/.DS_Store
+            **/.vscode/**
+            README.md
+            .gitignore
