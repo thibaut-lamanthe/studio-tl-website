@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Studio TL — Digital sur-mesure, Lyon</title>
+<meta name="description" content="Studio TL — Design UI/UX et développement front & back. Digital sur-mesure, basé à Lyon." />
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+
+<style>
+  /* ---------- Neue Montreal (self-hosted, woff2) ---------- */
+  @font-face {
+    font-family: "Neue Montreal";
+    src: url("assets/fonts/NeueMontreal-Light.woff2") format("woff2");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Neue Montreal";
+    src: url("assets/fonts/NeueMontreal-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Neue Montreal";
+    src: url("assets/fonts/NeueMontreal-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Neue Montreal";
+    src: url("assets/fonts/NeueMontreal-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+</style>
+
+<style>
+  /* ---------- Tokens ---------- */
+  :root {
+    --bg: #ffffff;
+    --fg: #0a0a0a;
+    --muted: rgba(10, 10, 10, 0.55);
+    --hairline: rgba(10, 10, 10, 0.12);
+    --accent: #16a34a; /* status dot only */
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --t-fast: 180ms;
+    --t-med: 420ms;
+    --t-slow: 800ms;
+
+    --pad-x: clamp(20px, 4vw, 48px);
+    --pad-y: clamp(20px, 3.2vw, 36px);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0a0a;
+    --fg: #f4f4f4;
+    --muted: rgba(244, 244, 244, 0.55);
+    --hairline: rgba(244, 244, 244, 0.14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      --bg: #0a0a0a;
+      --fg: #f4f4f4;
+      --muted: rgba(244, 244, 244, 0.55);
+      --hairline: rgba(244, 244, 244, 0.14);
+    }
+  }
+
+  /* ---------- Reset-ish ---------- */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Neue Montreal", ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.01em;
+    transition: background-color var(--t-med) var(--ease), color var(--t-med) var(--ease);
+    overflow: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+
+  /* ---------- Layout ---------- */
+  .page {
+    position: relative;
+    z-index: 2;
+    min-height: 100svh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: var(--pad-y) var(--pad-x);
+  }
+
+  /* ---------- Oversized background mark ---------- */
+  .bg-mark {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+  }
+  .bg-mark svg {
+    /* Larger than the viewport on its longest axis so it always bleeds. */
+    width: 140vmax;
+    height: auto;
+    aspect-ratio: 633.2 / 583.04;
+    /* Very subtle gray — light mode (over white). */
+    color: rgba(0, 0, 0, 0.035);
+    display: block;
+  }
+  :root[data-theme="dark"] .bg-mark svg,
+  :root.is-dark .bg-mark svg {
+    /* Lift it a hair in dark mode so it's still readable. */
+    color: rgba(255, 255, 255, 0.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) .bg-mark svg {
+      color: rgba(255, 255, 255, 0.04);
+    }
+  }
+
+  header.bar, footer.bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .meta {
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: #000;
+    font-weight: 400;
+  }
+
+  /* ---------- Brand mark (top-left) ---------- */
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: var(--fg);
+    font-weight: 500;
+  }
+  .brand .mark {
+    width: 14px;
+    height: 14px;
+    display: inline-flex;
+  }
+  .brand .mark svg { width: 100%; height: 100%; display: block; }
+  .brand .slash { color: var(--muted); }
+
+  /* ---------- Theme toggle (top-right) ---------- */
+  .toggle {
+    position: relative;
+    width: 42px;
+    height: 22px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline);
+    display: inline-flex;
+    align-items: center;
+    padding: 0 3px;
+    transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+  }
+  .toggle:hover { border-color: var(--fg); }
+  .toggle .knob {
+    position: absolute;
+    top: 50%;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--fg);
+    transform: translateY(-50%);
+    transition: left var(--t-med) var(--ease), background-color var(--t-med) var(--ease);
+  }
+  :root[data-theme="dark"] .toggle .knob,
+  :root.is-dark .toggle .knob { left: calc(100% - 19px); }
+  .toggle .icons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .toggle svg { width: 10px; height: 10px; display: block; }
+
+  /* ---------- Center stage ---------- */
+  main.stage {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: clamp(24px, 6vh, 80px) 0;
+  }
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(24px, 4.5vh, 44px);
+  }
+
+  .logo-center {
+    width: 300px;
+    max-width: 70vw;
+    aspect-ratio: 633.2 / 583.04;
+    color: var(--fg);
+    opacity: 0;
+    transform: translateY(8px);
+    animation: rise var(--t-slow) var(--ease) 120ms forwards;
+  }
+  .logo-center svg { width: 100%; height: 100%; display: block; }
+
+  .info {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-size: clamp(13px, 1.2vw, 15px);
+    font-weight: 500;
+    color: var(--fg);
+    opacity: 0;
+    transform: translateY(8px);
+    animation: rise var(--t-slow) var(--ease) 240ms forwards;
+  }
+  .info .dot {
+    width: 3px;
+    height: 3px;
+    background: var(--muted);
+    display: inline-block;
+  }
+
+  /* Contact link with sliding underline */
+  .contact {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 2px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .contact::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: translateX(-101%);
+    transition: transform var(--t-med) var(--ease);
+  }
+  .contact:hover::after,
+  .contact:focus-visible::after { transform: translateX(0); }
+
+  /* ---------- Status (footer) ---------- */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status .pulse {
+    position: relative;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .status .pulse::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { transform: scale(1);   opacity: 0.6; }
+    100% { transform: scale(2.6); opacity: 0;   }
+  }
+
+  /* ---------- Footer rows ---------- */
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .row.right { justify-content: flex-end; }
+  .clock { font-variant-numeric: tabular-nums; }
+
+  /* Square separator dot used in meta rows */
+  .sep {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    background: currentColor;
+    opacity: 0.55;
+  }
+
+  /* ---------- Custom cursor (Streamline pointer) ---------- */
+  .cursor {
+    position: fixed;
+    top: 0; left: 0;
+    width: 22px;
+    height: 22px;
+    pointer-events: none;
+    z-index: 9999;
+    /* SVG hotspot is around (4, 4) in a 24x24 viewBox → offset so the tip
+       sits exactly on the cursor's true x/y. */
+    transform: translate3d(-100px, -100px, 0);
+    transition: transform 30ms linear, width var(--t-fast) var(--ease), height var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
+    /* Default: solid black, no blending. */
+    color: #000;
+  }
+  /* Over the central logo only: invert against the pixel underneath
+     (white on black polygons, black on white background). */
+  .cursor.invert {
+    color: #fff;
+    mix-blend-mode: difference;
+  }
+  .cursor svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .cursor.hover {
+    width: 28px;
+    height: 28px;
+  }
+  @media (hover: none), (pointer: coarse) {
+    .cursor { display: none; }
+    body { cursor: auto; }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    body, a, button { cursor: none; }
+  }
+
+  /* ---------- Animations ---------- */
+  @keyframes rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .logo-center, .info { opacity: 1; transform: none; }
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 640px) {
+    .meta-hide-mobile { display: none; }
+    .info { gap: 10px; font-size: 13px; }
+    .row { gap: 8px; }
+  }
+  @media (max-width: 420px) {
+    .info .meta-shrink { display: none; }
+    .info .dot.shrink { display: none; }
+  }
+
+  /* ---------- Focus ---------- */
+  :focus-visible {
+    outline: 1px solid var(--fg);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+  <div class="cursor" aria-hidden="true" id="cursor">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19.64 16.81 15 12.15a0.27 0.27 0 0 1 -0.08 -0.2 0.29 0.29 0 0 1 0.11 -0.19l3 -2.08a1 1 0 0 0 0.42 -1 1 1 0 0 0 -0.7 -0.81L5 4.09a0.77 0.77 0 0 0 -0.75 0.19 0.76 0.76 0 0 0 -0.15 0.72l3.81 12.7a1 1 0 0 0 0.8 0.7 1 1 0 0 0 1 -0.42l2.08 -3a0.25 0.25 0 0 1 0.21 -0.08 0.29 0.29 0 0 1 0.2 0.07l4.67 4.67a1 1 0 0 0 1.41 0l1.41 -1.41a1 1 0 0 0 -0.05 -1.42Z" fill="currentColor"/>
+    </svg>
+  </div>
+
+  <div class="bg-mark" aria-hidden="true">
+    <svg viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="211.14 583.04 105.65 539.06 105.65 356 0 311.87 0 176.33 422.2 0 527.71 44.09 105.62 220.38 105.66 355.92 211.15 311.86 211.14 583.04"/>
+      <polygon points="633.2 232.13 633.2 90.69 422.13 0 422.13 141.42 633.2 232.13"/>
+      <polygon points="633.2 480.55 633.2 339.11 422.13 248.4 422.13 389.83 633.2 480.55"/>
+    </svg>
+  </div>
+
+  <div class="page">
+
+    <!-- TOP -->
+    <header class="bar">
+      <a class="brand" href="/" aria-label="Studio TL — accueil">
+        <span class="mark" aria-hidden="true">
+          <!-- inline so it inherits currentColor -->
+          <svg class="logo-svg" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="211.14 583.04 105.65 539.06 105.65 356 0 311.87 0 176.33 422.2 0 527.71 44.09 105.62 220.38 105.66 355.92 211.15 311.86 211.14 583.04"/>
+            <polygon points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/>
+            <polygon points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/>
+          </svg>
+        </span>
+        <span class="slash" aria-hidden="true">/</span>
+        <span>Studio TL</span>
+      </a>
+
+      <button
+        id="themeToggle"
+        class="toggle"
+        type="button"
+        role="switch"
+        aria-checked="false"
+        aria-label="Basculer le thème clair / sombre"
+        title="Thème clair / sombre"
+      >
+        <span class="icons" aria-hidden="true">
+          <!-- sun -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+          <!-- moon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </span>
+        <span class="knob"></span>
+      </button>
+    </header>
+
+    <!-- CENTER -->
+    <main class="stage">
+      <div class="stack">
+        <div class="logo-center" aria-hidden="true">
+          <svg class="logo-svg" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="211.14 583.04 105.65 539.06 105.65 356 0 311.87 0 176.33 422.2 0 527.71 44.09 105.62 220.38 105.66 355.92 211.15 311.86 211.14 583.04"/>
+            <polygon points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/>
+            <polygon points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/>
+          </svg>
+        </div>
+
+        <p class="info">
+          <span>Digital sur&#8209;mesure</span>
+          <span class="dot" aria-hidden="true"></span>
+          <a class="contact" href="mailto:hello@studiotl.fr">Contact</a>
+        </p>
+      </div>
+    </main>
+
+    <!-- BOTTOM -->
+    <footer class="bar">
+      <div class="row meta">
+        <span class="status" title="Disponible pour de nouveaux projets">
+          <span class="pulse" aria-hidden="true"></span>
+          <span>Disponible pour de nouveaux projets</span>
+        </span>
+        <span class="meta-hide-mobile sep" aria-hidden="true"></span>
+        <span class="clock meta-hide-mobile" id="clock" aria-label="Heure locale à Lyon">—</span>
+      </div>
+
+      <div class="row right meta">
+        <span>© 2026 Studio TL — Tous droits réservés</span>
+      </div>
+    </footer>
+
+  </div>
+
+<script>
+  /* ---------- Theme: auto + manual override (persisted) ---------- */
+  (function () {
+    var root = document.documentElement;
+    var btn  = document.getElementById('themeToggle');
+    var mq   = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function effective() {
+      var stored = localStorage.getItem('studiotl-theme');
+      if (stored === 'dark' || stored === 'light') return stored;
+      return mq.matches ? 'dark' : 'light';
+    }
+    function apply(mode, persist) {
+      if (persist) {
+        localStorage.setItem('studiotl-theme', mode);
+        root.setAttribute('data-theme', mode);
+      } else {
+        if (!localStorage.getItem('studiotl-theme')) root.removeAttribute('data-theme');
+      }
+      root.classList.toggle('is-dark', mode === 'dark');
+      btn.setAttribute('aria-checked', mode === 'dark' ? 'true' : 'false');
+    }
+
+    // initial
+    apply(effective(), false);
+
+    btn.addEventListener('click', function () {
+      var current = effective();
+      apply(current === 'dark' ? 'light' : 'dark', true);
+    });
+
+    mq.addEventListener && mq.addEventListener('change', function () {
+      if (!localStorage.getItem('studiotl-theme')) apply(effective(), false);
+    });
+  })();
+
+  /* ---------- Lyon local clock ---------- */
+  (function () {
+    var el = document.getElementById('clock');
+    if (!el) return;
+    function tick() {
+      try {
+        var s = new Intl.DateTimeFormat('fr-FR', {
+          timeZone: 'Europe/Paris',
+          hour: '2-digit', minute: '2-digit', hour12: false
+        }).format(new Date());
+        el.textContent = s + ' Lyon';
+      } catch (e) {
+        var d = new Date();
+        el.textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ' Lyon';
+      }
+    }
+    tick();
+    setInterval(tick, 15000);
+  })();
+
+  /* ---------- Custom cursor ---------- */
+  (function () {
+    var fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!fine) return;
+    var c = document.getElementById('cursor');
+    var x = 0, y = 0, tx = 0, ty = 0, raf = null;
+    function loop() {
+      x += (tx - x) * 0.55;
+      y += (ty - y) * 0.55;
+      // hotspot: SVG path tip is at (≈4, ≈4) in a 24×24 viewBox.
+      // Cursor square is 22px → tip offset = 22 * 4/24 ≈ 3.7px.
+      c.style.transform = 'translate3d(' + (x - 3.7) + 'px,' + (y - 3.7) + 'px,0)';
+      raf = requestAnimationFrame(loop);
+    }
+    window.addEventListener('mousemove', function (e) {
+      tx = e.clientX; ty = e.clientY;
+      if (!raf) raf = requestAnimationFrame(loop);
+    }, { passive: true });
+    window.addEventListener('mouseleave', function(){ c.style.opacity = '0'; });
+    window.addEventListener('mouseenter', function(){ c.style.opacity = '1'; });
+
+    var hoverables = document.querySelectorAll('a, button, [role="switch"]');
+    hoverables.forEach(function (el) {
+      el.addEventListener('mouseenter', function(){ c.classList.add('hover'); });
+      el.addEventListener('mouseleave', function(){ c.classList.remove('hover'); });
+    });
+
+    // Invert cursor only when over the central logo
+    var logo = document.querySelector('.logo-center');
+    if (logo) {
+      logo.addEventListener('mouseenter', function(){ c.classList.add('invert'); });
+      logo.addEventListener('mouseleave', function(){ c.classList.remove('invert'); });
+    }
+  })();
+</script>
+</body>
+</html>
