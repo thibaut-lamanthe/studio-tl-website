@@ -1,6 +1,10 @@
 # Studio TL — Site
 
-Site personnel statique (HTML/CSS/JS) hébergé chez Infomaniak.
+Site personnel statique (HTML/CSS/JS).
+
+- 🌐 **Production** : [www.studiotl.fr](https://www.studiotl.fr)
+- 🏠 **Hébergement** : Infomaniak
+- 🚀 **Déploiement** : automatique via GitHub Actions (FTPS) à chaque push sur `main`
 
 ## Structure
 
