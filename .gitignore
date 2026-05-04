@@ -5,6 +5,7 @@
 # Editors
 .vscode/
 .idea/
+.claude/
 *.swp
 
 # Logs / env
