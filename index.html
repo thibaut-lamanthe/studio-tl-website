@@ -122,8 +122,15 @@
         - de leur donner un z-index relatif au cursor
         - au cursor de blender (mix-blend-mode: difference) avec eux */
     min-height: 100svh;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
+    /* Flex column avec justify-content: space-between → header tout en haut,
+       footer tout en bas. main.stage est en position: absolute (hors flux
+       flex) et centré sur le viewport via inset:0 + place-items:center →
+       le contenu central est toujours pile au milieu vertical de la page,
+       indépendamment des hauteurs respectives header/footer (sinon, comme
+       le header est plus grand, le centre du grid 1fr serait décalé). */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     padding: var(--pad-y) var(--pad-x);
   }
 
@@ -164,16 +171,21 @@
   }
 
   /* ---------- Grain "imprimé" (logo principal uniquement) ----------
-     Filtre dense sur le logo. Le reste du texte (header, footer, info) reste lisse. */
-  .logo-center {
+     Filtre dense sur le logo. Appliqué directement au <svg> (et NON au
+     <div .logo-center> parent) parce que CSS filter sur un élément HTML
+     rasterise sa box layout sans inclure les enfants en overflow:visible
+     → les polygons qui translatent hors bbox pendant l'anim d'entrée
+     étaient cut. Sur un élément SVG natif, le filter respecte
+     l'overflow:visible et inclut tout le rendering. */
+  .logo-center .logo-svg {
     filter: url(#grain-light);
   }
-  :root[data-theme="dark"] .logo-center,
-  :root.is-dark .logo-center {
+  :root[data-theme="dark"] .logo-center .logo-svg,
+  :root.is-dark .logo-center .logo-svg {
     filter: url(#grain-dark);
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) .logo-center {
+    :root:not([data-theme]) .logo-center .logo-svg {
       filter: url(#grain-dark);
     }
   }
@@ -212,7 +224,12 @@
     font-weight: 400;
   }
 
-  /* ---------- Brand mark (top-left) ---------- */
+  /* ---------- Brand mark (top-left) ----------
+     Padding + margin négatifs symétriques au toggle : non pas pour le hit
+     area (c'est un simple <div>, pas de clic), mais pour donner au brand
+     les mêmes dimensions de box que le toggle. Sans ça, la brand serait
+     plus courte verticalement → flex align-items: center du header.bar
+     ne ferait pas matcher le visuel "Studio" + mark avec le SVG du toggle. */
   .brand {
     display: inline-flex;
     align-items: center;
@@ -221,6 +238,9 @@
     letter-spacing: 0.02em;
     color: var(--fg);
     font-weight: 700;
+    padding: 12px;
+    margin-left: -12px;
+    margin-top: -12px;
   }
   .brand .mark {
     width: 25px;
@@ -242,11 +262,13 @@
     align-items: center;
     justify-content: center;
     /* Padding 12px tout autour → zone de hover/clic élargie de 12px de
-       chaque côté du SVG. margin-right: -12px compense le padding-right :
-       le visuel du SVG reste aligné avec le bord droit de la page (sinon
-       il serait décalé de 12px vers la gauche par rapport à l'origine). */
+       chaque côté du SVG. margin-right/-top: -12px compensent les paddings
+       correspondants → le visuel du SVG reste aligné avec le bord droit
+       ET le bord haut de la page (sinon il serait décalé de 12px vers
+       l'intérieur par rapport à l'origine). */
     padding: 12px;
     margin-right: -12px;
+    margin-top: -12px;
     background: transparent;
     cursor: pointer;
     scale: 1;
@@ -353,13 +375,23 @@
     transform: translate(-50%, -50%) scale(3);
   }
 
-  /* ---------- Center stage ---------- */
+  /* ---------- Center stage ----------
+     position: absolute + inset: 0 → main.stage couvre tout le viewport
+     (= contenant block .page qui fait 100svh) → place-items: center
+     centre le contenu PILE au milieu du viewport, indépendamment de la
+     hauteur du header ou du footer.
+     pointer-events: none + auto sur .stack → main couvre visuellement
+     header/footer mais ne capture pas leurs clics. */
   main.stage {
+    position: absolute;
+    inset: 0;
     display: grid;
     place-items: center;
     text-align: center;
     padding: clamp(24px, 6vh, 80px) 0;
+    pointer-events: none;
   }
+  main.stage > .stack { pointer-events: auto; }
   .stack {
     display: flex;
     flex-direction: column;
@@ -632,14 +664,19 @@
   }
 
   /* ---------- Responsive ----------
-     Mobile : ratio ~80% pour garder la hiérarchie (header = center,
+     Mobile : ratio ~90% pour garder la hiérarchie (header = center,
      footer un cran en dessous). Desktop & tablette restent au défaut. */
   @media (max-width: 640px) {
     .meta-hide-mobile { display: none; }
-    .brand { font-size: 16px; }
-    .meta { font-size: 13px; }
-    .info { gap: 10px; font-size: 16px; }
+    .brand { font-size: 18px; }
+    .meta { font-size: 14px; }
+    .info { font-size: 18px; margin: 0; }
     .row { gap: 8px; }
+    /* Toggle SVG plus petit sur mobile. flex align-items: center du header
+       maintient l'axe vertical commun avec le brand (Studio + mark). */
+    .sun-and-moon { width: 18px; height: 18px; }
+    /* "(mais là, je dors)" trop verbeux à côté du status sur mobile. */
+    .status-aside { display: none; }
   }
   @media (max-width: 420px) {
     .info .meta-shrink { display: none; }
@@ -660,11 +697,14 @@
       <!-- Mask du logo : la forme du highlight (face arrière du L iso) devient
            un trou TRANSPARENT au lieu d'être rendue en fill var(--bg) opaque.
            Comme ça, le bg-grain (z:-1) passe à travers la zone du highlight
-           au lieu d'être occulté. White = visible, black = invisible. Le rect
-           remplit tout le viewBox en visible, le polygon (= ancien
-           logo-highlight) découpe le trou. -->
-      <mask id="logo-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="633.2" height="583.04">
-        <rect x="0" y="0" width="633.2" height="583.04" fill="white"/>
+           au lieu d'être occulté. White = visible, black = invisible.
+           Mask region étendue à -500 / +1633 (= viewBox + ~500 unités de
+           padding chaque côté) : les polygons qui translatent loin pendant
+           l'anim d'entrée (triangle à -105px, lip à -29.5px, etc.) restent
+           DANS la mask region → visibles. Sans cette extension, ils
+           étaient masqués out car hors de la zone définie du mask. -->
+      <mask id="logo-mask" maskUnits="userSpaceOnUse" x="-500" y="-500" width="1633.2" height="1583.04">
+        <rect x="-500" y="-500" width="1633.2" height="1583.04" fill="white"/>
         <polygon points="527.65 315.29 527.71 44.09 105.62 220.38 105.65 356 211.14 311.98 211.14 583.04 316.6 539 316.64 267.96 422.14 223.93 422.14 494.92 633.19 403.1 633.2 271.21 527.65 315.29" fill="black"/>
       </mask>
       <!-- Grain "imprimé" appliqué au logo central uniquement.
@@ -672,8 +712,11 @@
                         blancs subtils (α max 0.13).
            Dark mode  : noise noir en multiply blend sur le L blanc → spots
                         sombres (α max 0.6).
-           Le seed est mis à jour à 12fps via JS pour donner l'effet pellicule. -->
-      <filter id="grain-light" x="0" y="0" width="100%" height="100%">
+           Filter region étendue à 200% (x=-50% y=-50% w=200% h=200%) pour
+           que les polygons qui translatent loin pendant l'animation
+           d'entrée (triangle à -105px, lip à -29.5px) ne soient pas
+           clippés par la filter output (qui est sinon limitée à la bbox). -->
+      <filter id="grain-light" x="-50%" y="-50%" width="200%" height="200%">
         <feTurbulence id="grain-light-turb" type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch" seed="1" result="noise"/>
         <feColorMatrix in="noise" type="matrix"
           values="0 0 0 0 1
@@ -683,7 +726,7 @@
         <feComposite in="whiteNoise" in2="SourceAlpha" operator="in" result="constrained"/>
         <feBlend in="SourceGraphic" in2="constrained" mode="screen"/>
       </filter>
-      <filter id="grain-dark" x="0" y="0" width="100%" height="100%">
+      <filter id="grain-dark" x="-50%" y="-50%" width="200%" height="200%">
         <feTurbulence id="grain-dark-turb" type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch" seed="1" result="noise"/>
         <feColorMatrix in="noise" type="matrix"
           values="0 0 0 0 0
@@ -732,7 +775,7 @@
 
     <!-- TOP -->
     <header class="bar">
-      <a class="brand" href="/" aria-label="Studio TL — accueil">
+      <div class="brand">
         <span>Studio</span>
         <span class="mark" aria-hidden="true">
           <svg class="logo-svg" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -748,7 +791,7 @@
             </g>
           </svg>
         </span>
-      </a>
+      </div>
 
       <button
         id="themeToggle"
@@ -817,7 +860,7 @@
       </div>
 
       <div class="row right meta">
-        <span>© 2026<span class="meta-hide-mobile">&nbsp;Studio TL</span></span>
+        <span>© 2026</span>
         <span class="meta-hide-mobile" aria-hidden="true">–</span>
         <span class="meta-hide-mobile">Tous droits réservés</span>
       </div>
