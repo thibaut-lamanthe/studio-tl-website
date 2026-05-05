@@ -105,10 +105,7 @@
       var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       var mode = (stored === 'dark' || stored === 'light') ? stored : (prefersDark ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', mode);
-      if (mode === 'dark') {
-        document.documentElement.classList.add('is-dark');
-        document.documentElement.classList.add('is-dark-grain');
-      }
+      if (mode === 'dark') document.documentElement.classList.add('is-dark');
     } catch(e) {}
   })();
 </script>
@@ -181,7 +178,7 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     letter-spacing: -0.01em;
-    transition: background-color var(--t-med) var(--ease), color var(--t-med) var(--ease);
+    transition: background-color 500ms var(--ease), color 500ms var(--ease);
     overflow: hidden;
   }
   a { color: inherit; text-decoration: none; }
@@ -249,31 +246,18 @@
   }
 
   /* ---------- Grain "imprimé" (logo principal uniquement) ----------
-     Deux SVG stackés (light + dark grain), cross-fade opacité au toggle
-     de thème → switch en douceur entre les deux filtres avec le même
-     timing que le wipe (700ms, cubic-bezier(0.65, 0, 0.35, 1)).
-     Le trigger est la classe .is-dark-grain sur :root, togglée par JS
-     PILE au clic (T=0), indépendamment du data-theme (qui swap à T=700ms
-     pour synchroniser avec le wipe). Initial state set par l'inline
-     script du <head> pour éviter le FOUC. */
-  /* Couleurs FIXES sur chaque SVG (pas currentColor) : sinon le L flippe
-     de couleur quand data-theme swap (T=350ms du wipe), ce qui claque
-     visuellement et fait paraître la transition brutale alors que
-     l'opacité, elle, fade bien sur 700ms. Avec fill fixe, le L de chaque
-     SVG garde sa couleur, et le cross-fade d'opacité produit un blend
-     naturel des deux états. */
-  .logo-svg--light { color: #000; filter: url(#grain-light); }
-  .logo-svg--dark  { color: #fff; filter: url(#grain-dark); }
-  .logo-center .logo-svg--light,
-  .logo-center .logo-svg--dark {
-    position: absolute;
-    inset: 0;
-    transition: opacity 700ms cubic-bezier(0.65, 0, 0.35, 1);
+     Mono-grain : un seul filtre, dots floodés en var(--bg) (= couleur
+     opposée au L body). Le L body est rendu en var(--fg) via fill
+     direct sur les polygons (override le currentColor inheritance).
+     Les deux variables lerpent au theme toggle via CSS → grain change
+     de couleur smoothly avec le L body. */
+  .logo-center .logo-svg {
+    color: var(--bg);
+    filter: url(#grain);
   }
-  .logo-center .logo-svg--light { opacity: 1; }
-  .logo-center .logo-svg--dark  { opacity: 0; }
-  :root.is-dark-grain .logo-center .logo-svg--light { opacity: 0; }
-  :root.is-dark-grain .logo-center .logo-svg--dark  { opacity: 1; }
+  .logo-center .logo-svg polygon {
+    fill: var(--fg);
+  }
 
   /* ---------- Bg grain (sparse, plein viewport, statique) ----------
      Couche fixe derrière le contenu (z:-1). Le filter produit uniquement
@@ -447,8 +431,9 @@
   /* ---------- Theme wipe (radial transition entre light/dark) ----------
      Cercle plein écran centré sur la position du clic, avec backdrop-filter:
      invert(1) qui inverse les couleurs au fur et à mesure qu'il grandit.
-     À la fin de l'animation, on swap data-theme et on remet le cercle à scale 0
-     (sans transition pour éviter un retour visible). */
+     À T=700, on swap data-theme atomiquement avec la disparition du wipe.
+     Math : invert(old theme) = new theme look avec mono-grain → snap
+     invisible (pas de pop entre inverted-old et actual-new). */
   #theme-wipe {
     position: fixed;
     left: 0;
@@ -512,9 +497,10 @@
   }
   /* Fix anti-aliasing : un stroke avec la MÊME couleur que le fill, pour
      combler les sub-pixels transparents au niveau des arêtes partagées entre
-     polygones adjacents. */
+     polygones adjacents. (currentColor = var(--bg) sur ce SVG, donc on
+     utilise var(--fg) explicite pour matcher le fill.) */
   .logo-center .logo-svg polygon {
-    stroke: currentColor;
+    stroke: var(--fg);
     stroke-width: 1;
     stroke-linejoin: miter;
   }
@@ -801,34 +787,34 @@
            est rendu en device pixels (pas CSS pixels) → freq doublée sur
            Retina, pattern micro-tilé. JS plus bas détecte Safari et
            rabaisse à 0.6 dynamiquement. -->
-      <filter id="grain-light" x="-15%" y="-15%" width="130%" height="130%">
-        <feTurbulence id="grain-light-turb" type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch" seed="1" result="noise"/>
-        <feColorMatrix in="noise" type="matrix"
-          values="0 0 0 0 1
-                  0 0 0 0 1
-                  0 0 0 0 1
-                  0 0 0 0.3 -0.17" result="whiteNoise"/>
-        <feComposite in="whiteNoise" in2="SourceAlpha" operator="in" result="constrained"/>
-        <feBlend in="SourceGraphic" in2="constrained" mode="screen"/>
-      </filter>
-      <filter id="grain-dark" x="-15%" y="-15%" width="130%" height="130%">
-        <feTurbulence id="grain-dark-turb" type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch" seed="1" result="noise"/>
-        <feColorMatrix in="noise" type="matrix"
+      <!-- Mono-grain : un seul filtre pour les deux thèmes. Les dots sont
+           floodés en currentColor (= var(--bg) sur le SVG via CSS), donc
+           toujours de couleur opposée au L body (= var(--fg)). Les deux
+           --fg et --bg lerpent quand le thème change → le grain change
+           de couleur smoothly sans logique JS. Alpha unique pour les 2
+           thèmes (compromis vs avant 0.13 light + 0.45 dark). -->
+      <filter id="grain" x="-15%" y="-15%" width="130%" height="130%">
+        <feTurbulence id="grain-turb" type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch" seed="1" result="noise"/>
+        <feColorMatrix id="grain-matrix" in="noise" type="matrix"
           values="0 0 0 0 0
                   0 0 0 0 0
                   0 0 0 0 0
-                  0 0 0 0.9 -0.45" result="darkNoise"/>
-        <feComposite in="darkNoise" in2="SourceAlpha" operator="in" result="constrained"/>
-        <feBlend in="SourceGraphic" in2="constrained" mode="multiply"/>
+                  0 0 0 0.6 -0.30" result="alphaMatte"/>
+        <feFlood flood-color="currentColor" result="floodColor"/>
+        <feComposite operator="in" in="floodColor" in2="alphaMatte" result="dotsRaw"/>
+        <feComposite operator="in" in="dotsRaw" in2="SourceAlpha" result="dotsOnL"/>
+        <!-- feMerge stacks layers : SourceGraphic (L body) en bas, dots en
+             haut. Plus universel que feBlend mode="normal" qui peut avoir
+             des quirks selon le browser. -->
+        <feMerge>
+          <feMergeNode in="SourceGraphic"/>
+          <feMergeNode in="dotsOnL"/>
+        </feMerge>
       </filter>
       <!-- Bg grain : couche sparse plein viewport derrière le contenu.
-           Un seul filter pour les deux thèmes :
-             - flood-color="currentColor" → couleur des dots = var(--fg)
-               (noir en light, blanc en dark).
-             - L'offset α du colorMatrix (-12 en light, -12.5 en dark) est
-               muté via JS au theme toggle et lerpé sur 700ms pour matcher
-               la durée du wipe (cf. IIFE "Bg grain offset transition").
-           colorMatrix initial à -12 (light), JS s'occupe du reste. -->
+           flood-color="currentColor" → couleur des dots = var(--fg) qui
+           lerpe au theme toggle via la transition CSS du body
+           (background-color + color, 500ms cubic-bezier). -->
       <filter id="bg-grain" x="0" y="0" width="100%" height="100%">
         <feTurbulence id="bg-grain-turb" type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch" seed="1" result="noise"/>
         <feColorMatrix in="noise" type="matrix"
@@ -916,22 +902,7 @@
     <main class="stage">
       <div class="stack">
         <div class="logo-center" aria-hidden="true">
-          <!-- Deux SVG stackés, l'un avec grain-light, l'autre avec grain-dark.
-               L'opacité est cross-fadée par :root.is-dark-grain (togglée au
-               clic, T=0). Les polygons sont dupliqués pour que CSS animations
-               s'appliquent aux deux indépendamment (les <use>/<symbol>
-               n'héritent pas des classes). Coût accepté : 2× filter compute.
-               Les animations d'entrée sont identiques sur les deux copies. -->
-          <svg class="logo-svg logo-svg--light" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <g mask="url(#logo-mask)">
-              <g class="face face-triangle"><polygon points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/></g>
-              <g class="face face-top"><polygon points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/></g>
-              <g class="face face-lip"><polygon points="105.65 356 0 311.87 0 176.33 105.62 220.38"/></g>
-              <g class="face face-tower"><polygon points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/></g>
-              <g class="face face-middle"><polygon points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/></g>
-            </g>
-          </svg>
-          <svg class="logo-svg logo-svg--dark" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <svg class="logo-svg" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <g mask="url(#logo-mask)">
               <g class="face face-triangle"><polygon points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/></g>
               <g class="face face-top"><polygon points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/></g>
@@ -974,9 +945,7 @@
   (function () {
     var root = document.documentElement;
     var btn  = document.getElementById('themeToggle');
-    var wipe = document.getElementById('theme-wipe');
     var mq   = window.matchMedia('(prefers-color-scheme: dark)');
-    var WIPE_DURATION = 700;
 
     function effective() {
       var stored = localStorage.getItem('studiotl-theme');
@@ -993,10 +962,6 @@
       // interactions ou changements de préférence système.
       root.setAttribute('data-theme', mode);
       root.classList.toggle('is-dark', mode === 'dark');
-      // .is-dark-grain est togglé au CLIC (cf. handler) pour démarrer le
-      // cross-fade à T=0. On le re-sync ici pour les autres déclencheurs
-      // (changement de prefers-color-scheme système, init).
-      root.classList.toggle('is-dark-grain', mode === 'dark');
       btn.setAttribute('aria-checked', mode === 'dark' ? 'true' : 'false');
       // L'icône du toggle reflète l'ALTERNATIVE (cf. convention MIKII) :
       //  - dark mode → on montre le SOLEIL → .show-sun ON
@@ -1007,29 +972,25 @@
     // initial
     apply(effective(), false);
 
+    var wipe = document.getElementById('theme-wipe');
+    var WIPE_DURATION = 700;
+
     btn.addEventListener('click', function (e) {
-      var current = effective();
-      var target  = current === 'dark' ? 'light' : 'dark';
+      var target = effective() === 'dark' ? 'light' : 'dark';
       var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      // 1. ICÔNE : on toggle .show-sun IMMÉDIATEMENT, sans attendre le wipe.
-      //    L'animation sun↔moon démarre dès le clic.
+      // Icône : on toggle .show-sun immédiatement (ne pas attendre le wipe).
       btn.classList.toggle('show-sun', target === 'dark');
 
-      // 1b. GRAIN LOGO : on toggle .is-dark-grain à T=0 → la transition CSS
-      //     opacity 700ms cubic-bezier sur les 2 SVG cross-fade en sync
-      //     avec le wipe. Découplé de .is-dark (qui swap à T=700ms via
-      //     apply()) pour que le grain démarre sa transition AU CLIC.
-      root.classList.toggle('is-dark-grain', target === 'dark');
-
-      // 2. Signal au bg-grain de démarrer sa transition d'offset PILE au
-      //    moment du clic (sinon le MutationObserver attend que apply()
-      //    set le data-theme à T+700ms et la transition arrive trop tard).
+      // Signal aux écouteurs (bg-grain offset transition) que le thème
+      // va changer → ils peuvent démarrer leur transition à T=0 plutôt
+      // qu'attendre que apply() flippe data-theme à T=700 (sinon transition
+      // trop tardive vs le wipe).
       window.dispatchEvent(new CustomEvent('theme-will-change', {
         detail: { target: target }
       }));
 
-      // Pas de wipe si reduce-motion ou si on n'a pas l'élément
+      // Pas de wipe si reduce-motion ou élément absent
       if (!wipe || reduced) {
         apply(target, true);
         return;
@@ -1041,22 +1002,19 @@
       var y = e.clientY || (rect.top + rect.height / 2);
       wipe.style.left = x + 'px';
       wipe.style.top  = y + 'px';
-      // Force reflow avant d'ajouter la classe pour que la transition parte de scale 0
-      void wipe.offsetWidth;
+      void wipe.offsetWidth; // force reflow pour que la transition parte de scale 0
       wipe.classList.add('is-wiping');
 
       setTimeout(function () {
-        // Fix flash : la transition CSS sur body bg/color (420ms) faisait que,
-        // au moment où on retire le wipe, le body était encore en couleur de
-        // l'ancien thème (en cours de fade vers le nouveau). On désactive cette
-        // transition juste pendant le swap pour que le body bg snappe d'un coup.
+        // Snap thème + cleanup wipe atomiques en fin de wipe.
+        // Avec mono-grain : invert(old theme) = actual new theme exactly →
+        // pas de pop entre la vue inversée pendant le wipe et la vue
+        // réelle après le snap.
         document.body.style.transition = 'none';
-        // Swap thème + reset du cercle dans le même paint frame (atomique)
         apply(target, true);
         wipe.style.transition = 'none';
         wipe.classList.remove('is-wiping');
         void wipe.offsetWidth;
-        // Restore tout pour la prochaine fois
         document.body.style.transition = '';
         wipe.style.transition = '';
       }, WIPE_DURATION);
@@ -1254,20 +1212,15 @@
   })();
 
   /* ---------- Bg grain offset transition ----------
-     Le bg-grain a un threshold différent par thème (-12 light, -12.5 dark)
-     pour ajuster la densité perçue. JS mute l'offset du colorMatrix au
-     theme toggle et lerpe sur 700ms (= WIPE_DURATION) avec un ease-out
-     cubic. Pendant la transition, le filter recompute à chaque frame
-     (full viewport) → coût élevé mais éphémère et rare. Au load, snap
-     direct sur la valeur du thème courant.
-     MutationObserver sur documentElement.class (.is-dark) → détecte tous
-     les changements de thème (bouton, prefers-color-scheme), pas besoin
-     de coupler au code du toggle. */
+     L'offset alpha du bg-grain colorMatrix lerpe entre -12 (light) et
+     -12.5 (dark) au theme toggle pour ajuster légèrement la densité par
+     thème. Lerp 700ms en sync avec le wipe, easing identique. Au load,
+     snap direct sur la valeur du thème courant. */
   (function () {
     var matrix = document.querySelector('#bg-grain feColorMatrix');
     if (!matrix) return;
     var LIGHT = -12, DARK = -13;
-    var DURATION = 700;
+    var DURATION = 400;
     function setOffset(off) {
       matrix.setAttribute('values',
         '0 0 0 0 0\n' +
@@ -1281,9 +1234,7 @@
     var current = targetFor(isDark());
     setOffset(current);
 
-    /* Easing identique au theme-wipe CSS : cubic-bezier(0.65, 0, 0.35, 1).
-       Newton-Raphson pour retrouver t tel que bezier_x(t) = p, puis
-       calcul de bezier_y(t). 6 itérations suffisent pour < 1e-5 d'erreur. */
+    /* Bezier identique au wipe : cubic-bezier(0.65, 0, 0.35, 1) */
     function bezier(p) {
       var x1 = 0.65, y1 = 0, x2 = 0.35, y2 = 1;
       var t = p;
@@ -1314,21 +1265,21 @@
       raf = requestAnimationFrame(step);
     }
 
+    /* Event direct au clic du toggle, déclenché avec un petit delay de
+       125ms pour que la transition d'offset démarre légèrement après le
+       wipe (== quand le cercle a déjà commencé à grandir). On sync
+       lastDark pour que le MutationObserver (qui fire à T=700 quand
+       apply() set la classe) skip et ne re-déclenche pas l'anim. */
+    var BG_GRAIN_DELAY = 125;
     var lastDark = isDark();
-    // Event direct au clic du toggle, MAIS on délaie le démarrage de l'anim
-    // pour qu'elle commence après que le wipe ait déjà couvert pas mal
-    // d'écran → le changement de densité du bg-grain est moins visible
-    // hors zone wipe. On sync lastDark pour que le MutationObserver (qui
-    // fire à T+700ms quand apply() set la classe) skip.
-    var BG_GRAIN_DELAY = 0;
     window.addEventListener('theme-will-change', function (e) {
       var dark = e.detail.target === 'dark';
       if (dark === lastDark) return;
       lastDark = dark;
       setTimeout(function () { animate(targetFor(dark)); }, BG_GRAIN_DELAY);
     });
-    // Fallback : observer la classe pour les autres déclencheurs (changement
-    // de prefers-color-scheme système, etc.).
+    /* Fallback : observer la classe pour les autres déclencheurs
+       (changement de prefers-color-scheme système, etc.). */
     new MutationObserver(function () {
       var nowDark = isDark();
       if (nowDark !== lastDark) {
@@ -1344,23 +1295,16 @@
      ~55× plus lourd que le logo, donc on espace les recomputes pour
      garder l'effet vivant sans cramer le CPU/GPU. */
   (function () {
-    var logoTurbs = [
-      document.getElementById('grain-light-turb'),
-      document.getElementById('grain-dark-turb')
-    ].filter(Boolean);
+    var logoTurb = document.getElementById('grain-turb');
     var bgTurb = document.getElementById('bg-grain-turb');
-    if (!logoTurbs.length && !bgTurb) return;
+    if (!logoTurb && !bgTurb) return;
 
     /* Safari rend feTurbulence en device pixels (pas CSS pixels) → sur
        Retina la freq effective est doublée vs Chrome. On rabaisse les
-       baseFrequency de 50% pour matcher visuellement le rendu Chrome.
-       UA-sniff = pas glorieux mais pas de feature detect fiable pour ça. */
-    var ua = navigator.userAgent;
-    var isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
+       baseFrequency de 50% pour matcher visuellement le rendu Chrome. */
+    var isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
     if (isSafari) {
-      for (var i = 0; i < logoTurbs.length; i++) {
-        logoTurbs[i].setAttribute('baseFrequency', '0.6');
-      }
+      if (logoTurb) logoTurb.setAttribute('baseFrequency', '0.6');
       if (bgTurb) bgTurb.setAttribute('baseFrequency', '0.6');
     }
 
@@ -1368,9 +1312,8 @@
     var BG_INTERVAL = 1000 / 6;
     var lastLogo = 0, lastBg = 0;
     function tick(t) {
-      if (logoTurbs.length && t - lastLogo >= LOGO_INTERVAL) {
-        var seed = Math.floor(Math.random() * 1000);
-        for (var i = 0; i < logoTurbs.length; i++) logoTurbs[i].setAttribute('seed', seed);
+      if (logoTurb && t - lastLogo >= LOGO_INTERVAL) {
+        logoTurb.setAttribute('seed', Math.floor(Math.random() * 1000));
         lastLogo = t;
       }
       if (bgTurb && t - lastBg >= BG_INTERVAL) {
