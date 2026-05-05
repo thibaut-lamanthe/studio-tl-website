@@ -9,6 +9,22 @@
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
 
+<!-- Inline script SYNCHRONE pour appliquer le bon thème AVANT le paint.
+     Sans ça, on a un FOUC : la page se charge en light (défaut CSS), puis
+     le JS du body détecte prefers-color-scheme: dark et bascule, créant un
+     flash light → dark visible à l'œil. Ici on prend l'avance. -->
+<script>
+  (function() {
+    try {
+      var stored = localStorage.getItem('studiotl-theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var mode = (stored === 'dark' || stored === 'light') ? stored : (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', mode);
+      if (mode === 'dark') document.documentElement.classList.add('is-dark');
+    } catch(e) {}
+  })();
+</script>
+
 <style>
   /* ---------- Neue Montreal (self-hosted, woff2) ---------- */
   @font-face {
@@ -756,16 +772,11 @@
       if (persist) {
         localStorage.setItem('studiotl-theme', mode);
       }
-      // Toujours synchroniser l'attribut data-theme avec ce qui est stocké :
-      //  - storage = "dark"/"light"  → on set explicitement (override media query)
-      //  - storage vide              → on retire l'attribut (= laisse la media query décider)
-      // Avant : on ne set jamais data-theme côté init, donc au reload le bg
-      // ne suivait pas le thème stocké. Bug fixé.
-      if (localStorage.getItem('studiotl-theme')) {
-        root.setAttribute('data-theme', mode);
-      } else {
-        root.removeAttribute('data-theme');
-      }
+      // On set TOUJOURS data-theme, peu importe l'origine (système ou manuel).
+      // L'inline script du <head> a déjà fait ça avant le paint. Cette fonction
+      // est appelée ici pour ré-aligner aria + .show-sun après les premières
+      // interactions ou changements de préférence système.
+      root.setAttribute('data-theme', mode);
       root.classList.toggle('is-dark', mode === 'dark');
       btn.setAttribute('aria-checked', mode === 'dark' ? 'true' : 'false');
       // L'icône du toggle reflète l'ALTERNATIVE (cf. convention MIKII) :
