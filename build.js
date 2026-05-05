@@ -20,7 +20,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const SITE_URL = 'https://studio-tl.fr';
+const SITE_URL = 'https://www.studiotl.fr';
 const SOURCE = 'index.html';
 const I18N = 'i18n.json';
 const DIST = 'dist';
@@ -59,6 +59,19 @@ for (const [fr, en] of Object.entries(i18n)) {
 enVersion = enVersion.replace(/href="assets\//g, 'href="/assets/');
 enVersion = enVersion.replace(/src="assets\//g, 'src="/assets/');
 enVersion = enVersion.replace(/url\("assets\//g, 'url("/assets/');
+// OG meta : url + locale spécifiques à la version EN
+enVersion = enVersion.replace(
+  '<meta property="og:url" content="' + SITE_URL + '/" />',
+  '<meta property="og:url" content="' + SITE_URL + '/en/" />'
+);
+enVersion = enVersion.replace(
+  '<meta property="og:locale" content="fr_FR" />',
+  '<meta property="og:locale" content="en_US" />'
+);
+enVersion = enVersion.replace(
+  '<meta property="og:locale:alternate" content="en_US" />',
+  '<meta property="og:locale:alternate" content="fr_FR" />'
+);
 enVersion = injectHead(enVersion, 'en/');
 
 // === .htaccess : auto-redirect basé sur Accept-Language ===
@@ -95,12 +108,49 @@ const htaccess = [
   ''
 ].join('\n');
 
+// === robots.txt ===
+// Autorise tout, pointe vers le sitemap.
+const robots = [
+  'User-agent: *',
+  'Allow: /',
+  '',
+  'Sitemap: ' + SITE_URL + '/sitemap.xml',
+  ''
+].join('\n');
+
+// === sitemap.xml ===
+// Une entrée par version linguistique avec xhtml:link hreflang croisés.
+const today = new Date().toISOString().slice(0, 10);
+const sitemap = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
+  '        xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+  '  <url>',
+  '    <loc>' + SITE_URL + '/</loc>',
+  '    <lastmod>' + today + '</lastmod>',
+  '    <xhtml:link rel="alternate" hreflang="fr" href="' + SITE_URL + '/" />',
+  '    <xhtml:link rel="alternate" hreflang="en" href="' + SITE_URL + '/en/" />',
+  '    <xhtml:link rel="alternate" hreflang="x-default" href="' + SITE_URL + '/" />',
+  '  </url>',
+  '  <url>',
+  '    <loc>' + SITE_URL + '/en/</loc>',
+  '    <lastmod>' + today + '</lastmod>',
+  '    <xhtml:link rel="alternate" hreflang="fr" href="' + SITE_URL + '/" />',
+  '    <xhtml:link rel="alternate" hreflang="en" href="' + SITE_URL + '/en/" />',
+  '    <xhtml:link rel="alternate" hreflang="x-default" href="' + SITE_URL + '/" />',
+  '  </url>',
+  '</urlset>',
+  ''
+].join('\n');
+
 // === Output ===
 fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(path.join(DIST, 'en'), { recursive: true });
 fs.writeFileSync(path.join(DIST, 'index.html'), frVersion);
 fs.writeFileSync(path.join(DIST, 'en', 'index.html'), enVersion);
 fs.writeFileSync(path.join(DIST, '.htaccess'), htaccess);
+fs.writeFileSync(path.join(DIST, 'robots.txt'), robots);
+fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sitemap);
 
 // Copie récursive de assets/ → dist/assets/
 function copyDir(src, dest) {
@@ -119,4 +169,6 @@ console.log('Build OK :');
 console.log('  - ' + path.join(DIST, 'index.html') + ' (FR)');
 console.log('  - ' + path.join(DIST, 'en', 'index.html') + ' (EN)');
 console.log('  - ' + path.join(DIST, '.htaccess'));
+console.log('  - ' + path.join(DIST, 'robots.txt'));
+console.log('  - ' + path.join(DIST, 'sitemap.xml'));
 console.log('  - ' + path.join(DIST, 'assets/') + ' (copié)');

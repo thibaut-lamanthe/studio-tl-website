@@ -4,10 +4,85 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Studio TL — Digital sur-mesure, Lyon</title>
-<meta name="description" content="Studio TL — Design UI/UX et développement front & back. Digital sur-mesure, basé à Lyon." />
+<meta name="description" content="Studio TL — Thibaut Lamanthe, designer UI/UX et développeur freelance basé à Lyon. Digital sur-mesure." />
+<meta name="robots" content="index, follow" />
+
+<!-- Favicons : SVG en priorité (browsers modernes), PNG 512 pour Google
+     SERP (qui exige ≥ 48×48 multiple de 48), apple-touch 180 pour iOS. -->
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+<link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+
+<!-- Open Graph (preview Slack / LinkedIn / iMessage / etc.). og:url et
+     og:locale sont swappés par build.js pour la version EN. -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Studio TL" />
+<meta property="og:url" content="https://www.studiotl.fr/" />
+<meta property="og:title" content="Studio TL — Digital sur-mesure, Lyon" />
+<meta property="og:description" content="Studio TL — Thibaut Lamanthe, designer UI/UX et développeur freelance basé à Lyon. Digital sur-mesure." />
+<meta property="og:image" content="https://www.studiotl.fr/assets/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Studio TL — Digital sur-mesure, Lyon" />
+<meta property="og:locale" content="fr_FR" />
+<meta property="og:locale:alternate" content="en_US" />
+
+<!-- Twitter Card (X / Slack utilisent aussi ces tags) -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Studio TL — Digital sur-mesure, Lyon" />
+<meta name="twitter:description" content="Studio TL — Thibaut Lamanthe, designer UI/UX et développeur freelance basé à Lyon. Digital sur-mesure." />
+<meta name="twitter:image" content="https://www.studiotl.fr/assets/og-image.png" />
+
+<!-- Structured data : Person + Organization + WebSite. Permet à Google
+     de comprendre "Thibaut Lamanthe = personne réelle, Studio TL = sa
+     marque, basés à Lyon" → meilleur rendu SERP, knowledge panel
+     possible quand on cherche le nom. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://www.studiotl.fr/#person",
+      "name": "Thibaut Lamanthe",
+      "jobTitle": "Designer UI/UX & développeur freelance",
+      "url": "https://www.studiotl.fr/",
+      "image": "https://www.studiotl.fr/assets/favicon-512.png",
+      "worksFor": { "@id": "https://www.studiotl.fr/#org" },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Lyon",
+        "addressCountry": "FR"
+      }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://www.studiotl.fr/#org",
+      "name": "Studio TL",
+      "url": "https://www.studiotl.fr/",
+      "logo": "https://www.studiotl.fr/assets/favicon-512.png",
+      "image": "https://www.studiotl.fr/assets/og-image.png",
+      "founder": { "@id": "https://www.studiotl.fr/#person" },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Lyon",
+        "addressCountry": "FR"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://www.studiotl.fr/#website",
+      "url": "https://www.studiotl.fr/",
+      "name": "Studio TL",
+      "publisher": { "@id": "https://www.studiotl.fr/#org" },
+      "inLanguage": ["fr", "en"]
+    }
+  ]
+}
+</script>
 
 <!-- Preload des fonts critiques : démarre le fetch en parallèle du parsing
      HTML, sans attendre que les @font-face du <style> soient évalués.
@@ -30,7 +105,10 @@
       var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       var mode = (stored === 'dark' || stored === 'light') ? stored : (prefersDark ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', mode);
-      if (mode === 'dark') document.documentElement.classList.add('is-dark');
+      if (mode === 'dark') {
+        document.documentElement.classList.add('is-dark');
+        document.documentElement.classList.add('is-dark-grain');
+      }
     } catch(e) {}
   })();
 </script>
@@ -171,24 +249,31 @@
   }
 
   /* ---------- Grain "imprimé" (logo principal uniquement) ----------
-     Filtre dense sur le logo. Appliqué directement au <svg> (et NON au
-     <div .logo-center> parent) parce que CSS filter sur un élément HTML
-     rasterise sa box layout sans inclure les enfants en overflow:visible
-     → les polygons qui translatent hors bbox pendant l'anim d'entrée
-     étaient cut. Sur un élément SVG natif, le filter respecte
-     l'overflow:visible et inclut tout le rendering. */
-  .logo-center .logo-svg {
-    filter: url(#grain-light);
+     Deux SVG stackés (light + dark grain), cross-fade opacité au toggle
+     de thème → switch en douceur entre les deux filtres avec le même
+     timing que le wipe (700ms, cubic-bezier(0.65, 0, 0.35, 1)).
+     Le trigger est la classe .is-dark-grain sur :root, togglée par JS
+     PILE au clic (T=0), indépendamment du data-theme (qui swap à T=700ms
+     pour synchroniser avec le wipe). Initial state set par l'inline
+     script du <head> pour éviter le FOUC. */
+  /* Couleurs FIXES sur chaque SVG (pas currentColor) : sinon le L flippe
+     de couleur quand data-theme swap (T=350ms du wipe), ce qui claque
+     visuellement et fait paraître la transition brutale alors que
+     l'opacité, elle, fade bien sur 700ms. Avec fill fixe, le L de chaque
+     SVG garde sa couleur, et le cross-fade d'opacité produit un blend
+     naturel des deux états. */
+  .logo-svg--light { color: #000; filter: url(#grain-light); }
+  .logo-svg--dark  { color: #fff; filter: url(#grain-dark); }
+  .logo-center .logo-svg--light,
+  .logo-center .logo-svg--dark {
+    position: absolute;
+    inset: 0;
+    transition: opacity 700ms cubic-bezier(0.65, 0, 0.35, 1);
   }
-  :root[data-theme="dark"] .logo-center .logo-svg,
-  :root.is-dark .logo-center .logo-svg {
-    filter: url(#grain-dark);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) .logo-center .logo-svg {
-      filter: url(#grain-dark);
-    }
-  }
+  .logo-center .logo-svg--light { opacity: 1; }
+  .logo-center .logo-svg--dark  { opacity: 0; }
+  :root.is-dark-grain .logo-center .logo-svg--light { opacity: 0; }
+  :root.is-dark-grain .logo-center .logo-svg--dark  { opacity: 1; }
 
   /* ---------- Bg grain (sparse, plein viewport, statique) ----------
      Couche fixe derrière le contenu (z:-1). Le filter produit uniquement
@@ -439,10 +524,8 @@
   /* Entrée façon construction iso 30° : chaque face entre depuis sa "normale"
      dans la perspective 3D (top bar tombe d'en haut, lip vient de gauche,
      tower et middle montent du bas, triangle arrive depuis upper-right). */
-  .logo-center .logo-svg polygon {
+  .logo-center .logo-svg .face {
     opacity: 0;
-    transform-box: fill-box;
-    transform-origin: center;
     animation-duration: 0.9s;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     animation-fill-mode: both; /* both → from state pendant le delay, to state après */
@@ -645,15 +728,6 @@
   }
   .row.right { justify-content: flex-end; }
   .clock { font-variant-numeric: tabular-nums; }
-  /* Le `:` de l'heure clignote à 1Hz comme une horloge digitale.
-     step-end : maintient la valeur courante jusqu'à la prochaine keyframe
-     puis snap → blink franc 50/50 sans fade. */
-  .clock-colon {
-    animation: clock-blink 1s step-end infinite;
-  }
-  @keyframes clock-blink {
-    50% { opacity: 0; }
-  }
 
   /* ---------- Animations ---------- */
   @media (prefers-reduced-motion: reduce) {
@@ -794,11 +868,16 @@
                  arrière iso) est carved en trou transparent → bg-grain visible
                  à travers. -->
             <g mask="url(#logo-mask)">
-              <polygon class="face-triangle" points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/>
-              <polygon class="face-top" points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/>
-              <polygon class="face-lip" points="105.65 356 0 311.87 0 176.33 105.62 220.38"/>
-              <polygon class="face-tower" points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/>
-              <polygon class="face-middle" points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/>
+              <!-- Chaque polygon wrappé dans un <g class="face face-X"> :
+                   les CSS transforms sur <g> sont en CSS pixels sur tous
+                   les browsers. Sur <polygon> direct, Safari les
+                   interprète en user units du viewBox local → translates
+                   ridicules, anim d'entrée invisible côté Safari. -->
+              <g class="face face-triangle"><polygon points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/></g>
+              <g class="face face-top"><polygon points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/></g>
+              <g class="face face-lip"><polygon points="105.65 356 0 311.87 0 176.33 105.62 220.38"/></g>
+              <g class="face face-tower"><polygon points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/></g>
+              <g class="face face-middle"><polygon points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/></g>
             </g>
           </svg>
         </span>
@@ -837,17 +916,28 @@
     <main class="stage">
       <div class="stack">
         <div class="logo-center" aria-hidden="true">
-          <svg class="logo-svg" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <!-- Faces du L groupées sous le mask : la zone du highlight (face
-                 arrière iso) est carved en trou transparent → bg-grain visible
-                 à travers. Les animations CSS (clip-path inset, transform)
-                 restent par face, le mask compose dessus sans interférer. -->
+          <!-- Deux SVG stackés, l'un avec grain-light, l'autre avec grain-dark.
+               L'opacité est cross-fadée par :root.is-dark-grain (togglée au
+               clic, T=0). Les polygons sont dupliqués pour que CSS animations
+               s'appliquent aux deux indépendamment (les <use>/<symbol>
+               n'héritent pas des classes). Coût accepté : 2× filter compute.
+               Les animations d'entrée sont identiques sur les deux copies. -->
+          <svg class="logo-svg logo-svg--light" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <g mask="url(#logo-mask)">
-              <polygon class="face-triangle" points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/>
-              <polygon class="face-top" points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/>
-              <polygon class="face-lip" points="105.65 356 0 311.87 0 176.33 105.62 220.38"/>
-              <polygon class="face-tower" points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/>
-              <polygon class="face-middle" points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/>
+              <g class="face face-triangle"><polygon points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/></g>
+              <g class="face face-top"><polygon points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/></g>
+              <g class="face face-lip"><polygon points="105.65 356 0 311.87 0 176.33 105.62 220.38"/></g>
+              <g class="face face-tower"><polygon points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/></g>
+              <g class="face face-middle"><polygon points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/></g>
+            </g>
+          </svg>
+          <svg class="logo-svg logo-svg--dark" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <g mask="url(#logo-mask)">
+              <g class="face face-triangle"><polygon points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/></g>
+              <g class="face face-top"><polygon points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/></g>
+              <g class="face face-lip"><polygon points="105.65 356 0 311.87 0 176.33 105.62 220.38"/></g>
+              <g class="face face-tower"><polygon points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/></g>
+              <g class="face face-middle"><polygon points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/></g>
             </g>
           </svg>
         </div>
@@ -903,6 +993,10 @@
       // interactions ou changements de préférence système.
       root.setAttribute('data-theme', mode);
       root.classList.toggle('is-dark', mode === 'dark');
+      // .is-dark-grain est togglé au CLIC (cf. handler) pour démarrer le
+      // cross-fade à T=0. On le re-sync ici pour les autres déclencheurs
+      // (changement de prefers-color-scheme système, init).
+      root.classList.toggle('is-dark-grain', mode === 'dark');
       btn.setAttribute('aria-checked', mode === 'dark' ? 'true' : 'false');
       // L'icône du toggle reflète l'ALTERNATIVE (cf. convention MIKII) :
       //  - dark mode → on montre le SOLEIL → .show-sun ON
@@ -921,6 +1015,12 @@
       // 1. ICÔNE : on toggle .show-sun IMMÉDIATEMENT, sans attendre le wipe.
       //    L'animation sun↔moon démarre dès le clic.
       btn.classList.toggle('show-sun', target === 'dark');
+
+      // 1b. GRAIN LOGO : on toggle .is-dark-grain à T=0 → la transition CSS
+      //     opacity 700ms cubic-bezier sur les 2 SVG cross-fade en sync
+      //     avec le wipe. Découplé de .is-dark (qui swap à T=700ms via
+      //     apply()) pour que le grain démarre sa transition AU CLIC.
+      root.classList.toggle('is-dark-grain', target === 'dark');
 
       // 2. Signal au bg-grain de démarrer sa transition d'offset PILE au
       //    moment du clic (sinon le MutationObserver attend que apply()
@@ -1008,7 +1108,7 @@
       }
       // innerHTML pour wrapper le `:` dans un span animable. hh/mm/ampm
       // viennent de Intl/Date donc safe (pas d'injection).
-      el.innerHTML = hh + '<span class="clock-colon">:</span>' + mm + ampm + ' Lyon';
+      el.textContent = hh + ':' + mm + ampm + ' Lyon';
       if (aside) {
         var total = lyonH * 60 + lyonM;
         var sleeping = total >= (22 * 60 + 30) || total < (6 * 60);
@@ -1166,7 +1266,7 @@
   (function () {
     var matrix = document.querySelector('#bg-grain feColorMatrix');
     if (!matrix) return;
-    var LIGHT = -12, DARK = -12.5;
+    var LIGHT = -12, DARK = -13;
     var DURATION = 700;
     function setOffset(off) {
       matrix.setAttribute('values',
@@ -1181,6 +1281,22 @@
     var current = targetFor(isDark());
     setOffset(current);
 
+    /* Easing identique au theme-wipe CSS : cubic-bezier(0.65, 0, 0.35, 1).
+       Newton-Raphson pour retrouver t tel que bezier_x(t) = p, puis
+       calcul de bezier_y(t). 6 itérations suffisent pour < 1e-5 d'erreur. */
+    function bezier(p) {
+      var x1 = 0.65, y1 = 0, x2 = 0.35, y2 = 1;
+      var t = p;
+      for (var i = 0; i < 6; i++) {
+        var x = 3*(1-t)*(1-t)*t*x1 + 3*(1-t)*t*t*x2 + t*t*t;
+        var dx = 3*(1-t)*(1-t)*x1 + 6*(1-t)*t*(x2-x1) + 3*t*t*(1-x2);
+        if (Math.abs(dx) < 1e-6) break;
+        t -= (x - p) / dx;
+        if (t < 0) t = 0; else if (t > 1) t = 1;
+      }
+      return 3*(1-t)*(1-t)*t*y1 + 3*(1-t)*t*t*y2 + t*t*t;
+    }
+
     var raf = null;
     function animate(to) {
       if (raf) cancelAnimationFrame(raf);
@@ -1189,7 +1305,7 @@
       function step(t) {
         if (startT === null) startT = t;
         var p = Math.min(1, (t - startT) / DURATION);
-        var eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+        var eased = bezier(p);
         current = from + (to - from) * eased;
         setOffset(current);
         if (p < 1) raf = requestAnimationFrame(step);
@@ -1199,14 +1315,17 @@
     }
 
     var lastDark = isDark();
-    // Event direct au clic du toggle → animation démarre PILE avec le wipe.
-    // On sync lastDark pour que le MutationObserver (qui fire à T+700ms
-    // quand apply() set la classe) skip et ne re-déclenche pas l'anim.
+    // Event direct au clic du toggle, MAIS on délaie le démarrage de l'anim
+    // pour qu'elle commence après que le wipe ait déjà couvert pas mal
+    // d'écran → le changement de densité du bg-grain est moins visible
+    // hors zone wipe. On sync lastDark pour que le MutationObserver (qui
+    // fire à T+700ms quand apply() set la classe) skip.
+    var BG_GRAIN_DELAY = 0;
     window.addEventListener('theme-will-change', function (e) {
       var dark = e.detail.target === 'dark';
       if (dark === lastDark) return;
-      animate(targetFor(dark));
       lastDark = dark;
+      setTimeout(function () { animate(targetFor(dark)); }, BG_GRAIN_DELAY);
     });
     // Fallback : observer la classe pour les autres déclencheurs (changement
     // de prefers-color-scheme système, etc.).
@@ -1243,14 +1362,9 @@
         logoTurbs[i].setAttribute('baseFrequency', '0.6');
       }
       if (bgTurb) bgTurb.setAttribute('baseFrequency', '0.6');
-      /* Safari rend feTurbulence beaucoup plus lentement que Chrome → le
-         seed tick à 12fps (logo) + 6fps (bg) plombe tout : cursor lag,
-         hover lag, animations saccadées. On désactive le shimmer sur
-         Safari → grain statique mais site fluide. Trade-off accepté. */
-      return;
     }
 
-    var LOGO_INTERVAL = 1000 / 12;
+    var LOGO_INTERVAL = 1000 / 6;
     var BG_INTERVAL = 1000 / 6;
     var lastLogo = 0, lastBg = 0;
     function tick(t) {
