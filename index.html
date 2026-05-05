@@ -1243,6 +1243,11 @@
         logoTurbs[i].setAttribute('baseFrequency', '0.6');
       }
       if (bgTurb) bgTurb.setAttribute('baseFrequency', '0.6');
+      /* Safari rend feTurbulence beaucoup plus lentement que Chrome → le
+         seed tick à 12fps (logo) + 6fps (bg) plombe tout : cursor lag,
+         hover lag, animations saccadées. On désactive le shimmer sur
+         Safari → grain statique mais site fluide. Trade-off accepté. */
+      return;
     }
 
     var LOGO_INTERVAL = 1000 / 12;
