@@ -26,14 +26,9 @@
 </script>
 
 <style>
-  /* ---------- Neue Montreal (self-hosted, woff2) ---------- */
-  @font-face {
-    font-family: "Neue Montreal";
-    src: url("assets/fonts/NeueMontreal-Light.woff2") format("woff2");
-    font-weight: 300;
-    font-style: normal;
-    font-display: swap;
-  }
+  /* ---------- Neue Montreal (self-hosted, woff2) ----------
+     Light (300) supprimé : non utilisé. Trois weights chargés : Regular (400),
+     Medium (500), Bold (700). */
   @font-face {
     font-family: "Neue Montreal";
     src: url("assets/fonts/NeueMontreal-Regular.woff2") format("woff2");
@@ -103,6 +98,10 @@
   }
   a { color: inherit; text-decoration: none; }
   button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+  /* Sélection de texte : bg = couleur d'encre, text = couleur de fond
+     → en light mode : bg noir / text blanc, en dark mode : bg blanc / text noir. */
+  ::selection { background: var(--fg); color: var(--bg); }
+  ::-moz-selection { background: var(--fg); color: var(--bg); }
 
   /* ---------- Layout ---------- */
   .page {
@@ -119,19 +118,17 @@
   }
 
   /* ---------- Curseur custom ----------
-     Rond blanc qui suit la souris avec lerp pour donner du délai.
-     mix-blend-mode: difference → noir sur fond clair, blanc sur fond sombre,
-     fonctionne en light ET dark sans aucune logique conditionnelle.
-     filter: url(#grain-X) → le grain s'applique aussi sur le curseur. */
+     Petit point blanc (12px, 24px au hover) qui suit la souris avec lerp.
+     mix-blend-mode: difference → couleur s'inverse selon ce qu'il y a
+     derrière (noir sur bg clair, blanc sur bg sombre, et inversion sur les
+     textes / icônes / SVG du header / footer / toggle / logo).
+     Pas de grain sur le cursor (le grain reste réservé au logo). */
   .cursor {
     position: fixed;
     top: 0;
     left: 0;
-    /* On grow la TAILLE RÉELLE au hover (au lieu de scaler) : le filtre SVG
-       se recalcule à la nouvelle taille → le grain reste net (sinon le scale
-       upscale la version rastérisée à 50px → grain flou). */
-    width: var(--cursor-size, 50px);
-    height: var(--cursor-size, 50px);
+    width: var(--cursor-size, 12px);
+    height: var(--cursor-size, 12px);
     border-radius: 50%;
     background: #fff;
     pointer-events: none;
@@ -145,21 +142,19 @@
     transition: opacity 200ms var(--ease),
                 width 280ms var(--ease),
                 height 280ms var(--ease);
-    /* Filtre dédié `grain-cursor` : multiply (pour assombrir le cursor blanc),
-       mais avec une intensité alpha douce qui matche visuellement le grain
-       du logo (après inversion par mix-blend-mode: difference). */
-    filter: url(#grain-cursor);
     will-change: translate;
   }
-  .cursor.is-hover { --cursor-size: 68px; }
+  .cursor.is-hover { --cursor-size: 24px; }
+  /* Hover spécifique au toggle dark mode : cursor plus large pour
+     accentuer la zone interactive (le toggle est plus gros que le mailto). */
+  .cursor.is-hover-lg { --cursor-size: 45px; }
   /* Sur tablette / téléphone : pas de curseur custom */
   @media (hover: none), (pointer: coarse) {
     .cursor { display: none; }
   }
 
   /* ---------- Grain "imprimé" (logo principal uniquement) ----------
-     Filtre uniquement sur le logo central + le cursor (cf. règles .cursor).
-     Le reste du texte (header, footer, info) reste lisse. */
+     Filtre dense sur le logo. Le reste du texte (header, footer, info) reste lisse. */
   .logo-center {
     filter: url(#grain-light);
   }
@@ -171,6 +166,25 @@
     :root:not([data-theme]) .logo-center {
       filter: url(#grain-dark);
     }
+  }
+
+  /* ---------- Bg grain (sparse, plein viewport, statique) ----------
+     Couche fixe derrière le contenu (z:-1). Le filter produit uniquement
+     des dots couleur courante (currentColor → résolu en var(--fg) via le
+     `color` ci-dessous) full opacité, densité très faible → effet
+     "aberrations incrustées de vieille pellicule".
+     Statique (pas de rAF tick) : le pattern est fixé au load → coût ≈ 0
+     après le premier paint. Le toggle de thème change juste la couleur
+     (color: var(--fg) → noir en light, blanc en dark) sans regénérer.
+     bg #fff opaque pour que SourceAlpha contraigne le filter aux limites. */
+  .bg-grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background: #fff;
+    color: var(--fg);
+    filter: url(#bg-grain);
   }
 
   header.bar, footer.bar {
@@ -196,7 +210,7 @@
     font-size: 18px;
     letter-spacing: 0.02em;
     color: var(--fg);
-    font-weight: 600;
+    font-weight: 700;
   }
   .brand .mark {
     width: 25px;
@@ -212,22 +226,21 @@
      Animation CSS via cx (de la circle du mask) + scale (du sun) + rotate (des beams).
      Source d'inspiration : "Sun & Moon Theme Toggle" d'Adam Argyle. */
   .toggle {
-    width: 36px;
-    height: 36px;
     border-radius: 50%;
     border: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
+    /* Padding 12px tout autour → zone de hover/clic élargie de 12px de
+       chaque côté du SVG. margin-right: -12px compense le padding-right :
+       le visuel du SVG reste aligné avec le bord droit de la page (sinon
+       il serait décalé de 12px vers la gauche par rapport à l'origine). */
+    padding: 12px;
+    margin-right: -12px;
     background: transparent;
     cursor: pointer;
-    /* On utilise translate / scale séparément pour pouvoir composer
-       le magnetic (translate via JS) avec le scale au hover. */
-    translate: 0 0;
     scale: 1;
     transition: scale var(--t-fast) var(--ease);
-    will-change: translate;
   }
   .toggle:hover { scale: 1.1; }
 
@@ -346,7 +359,7 @@
 
   .logo-center {
     position: relative;
-    z-index: 3; /* > cursor (z:2) → cursor passe SOUS le logo */
+    z-index: 1; /* < cursor (z:2) → cursor passe AU-DESSUS du logo et inverse ses couleurs via mix-blend-mode */
     width: 350px;
     max-width: 70vw;
     aspect-ratio: 633.2 / 583.04;
@@ -363,18 +376,14 @@
        Sans overflow: visible, ils sont rognés sur les bords. */
     overflow: visible;
   }
-  /* Le highlight du logo "filled" : couleur du bg du body (s'inverse en dark mode) */
-  .logo-svg .logo-highlight { fill: var(--bg); }
   /* Fix anti-aliasing : un stroke avec la MÊME couleur que le fill, pour
      combler les sub-pixels transparents au niveau des arêtes partagées entre
-     polygones adjacents. Sans ça, le highlight (couleur opposée, derrière)
-     laisse passer une fine ligne aux jointures. */
+     polygones adjacents. */
   .logo-center .logo-svg polygon {
     stroke: currentColor;
     stroke-width: 1;
     stroke-linejoin: miter;
   }
-  .logo-center .logo-svg .logo-highlight { stroke: var(--bg); }
   /* Entrée du logo central : chaque polygone slide-up avec stagger.
      Le highlight (face arrière) apparaît en premier, puis les 3 faces
      avant en cascade. Donne un feeling "le logo se construit". */
@@ -403,12 +412,6 @@
     animation-delay: 400ms;
     animation-duration: 1.4s;
   }
-  /* Highlight : pas d'animation, visible d'entrée. On override la base rule
-     qui mettait opacity: 0. */
-  .logo-center .logo-svg .logo-highlight {
-    opacity: 1;
-    animation: none;
-  }
   .logo-center .logo-svg .face-top {
     animation-name: poly-from-top-right-iso;    animation-delay: 200ms;
     animation-duration: 1.4s;
@@ -417,14 +420,20 @@
     animation-name: poly-from-bottom-left-iso;     animation-delay: 100ms;
     animation-duration: 1.4s;
   }
-  /* Triangle : avancé à 700ms, sans fade-in (opacité 1 d'entrée).
-     Slide depuis le bas-gauche à 22.7° pour respecter l'isométrie du logo.
-     Rendu en premier dans le DOM → masqué par les faces du L pendant son slide. */
+  /* Triangle : opacity 0 au début (cf. base rule) puis flip à 1 à 400ms
+     (= moment où face-middle commence à apparaître). Avant ça, le triangle
+     est à sa position initiale (translate -105, 44) et un petit pixel
+     dépassait au-dessus du highlight ; en le cachant en opacity 0, on
+     élimine le défaut visuel. Le slide démarre ensuite à 600ms.
+     Deux animations parallèles via shorthand : triangle-show (opacity flip)
+     + triangle-slide-no-fade (translation). */
   .logo-center .logo-svg .face-triangle {
-    animation-name: triangle-slide-no-fade;
-    animation-delay: 600ms;
-    animation-duration: 1.4s;
-    opacity: 1; /* override la base rule (opacity: 0) */
+    animation:
+      triangle-show 1ms linear 550ms forwards,
+      triangle-slide-no-fade 1.4s cubic-bezier(0.16, 1, 0.3, 1) 600ms both;
+  }
+  @keyframes triangle-show {
+    to { opacity: 1; }
   }
   /* Slide diagonal 22.7° depuis plus loin (~115px de distance totale),
      SANS fade-in (opacité reste à 1).
@@ -495,25 +504,29 @@
     /* Pas d'animation sur le wrapper — chaque ligne a son propre fade-in. */
   }
   /* Entrée des lignes du texte : fade-in sobre + léger Y translate.
-     Stagger court (250ms) → la ligne 2 commence avant que la 1 ait fini. */
+     Stagger court (250ms) → la ligne 2 commence avant que la 1 ait fini.
+     pointer-events: none pendant l'animation → tant que le mailto n'est pas
+     visible, il n'intercepte ni les événements (pas de cursor pointer
+     ni de is-hover sur le custom cursor). À 100% de l'animation, la
+     keyframe passe pointer-events à auto et c'est figé par animation-fill-mode: forwards. */
   .info > * {
     opacity: 0;
     transform: translateY(6px);
+    pointer-events: none;
     animation: line-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  .info > *:nth-child(1) { animation-delay: 1500ms; }
-  .info > *:nth-child(2) { animation-delay: 1620ms; }
+  .info > *:nth-child(1) { animation-delay: 1400ms; }
+  .info > *:nth-child(2) { animation-delay: 1520ms; }
   @keyframes line-in {
-    to { opacity: 1; transform: translateY(0); }
+    to { opacity: 1; transform: translateY(0); pointer-events: auto; }
   }
   /* Contact link with sliding underline */
   .contact {
     position: relative;
     display: inline-block;
-    padding-bottom: 2px;
-    overflow: hidden;
+    padding-bottom: 4px;
     white-space: nowrap;
-    font-weight: 600;
+    font-weight: 700;
   }
   .contact::after {
     content: "";
@@ -521,13 +534,22 @@
     left: 0;
     bottom: 0;
     width: 100%;
-    height: 1px;
+    height: 3px;
     background: currentColor;
-    transform: translateX(-101%);
-    transition: transform var(--t-med) var(--ease);
+    /* États du clip-path :
+       - default (non-hovered) : inset(0 100% 0 0) → 0-width au LEFT edge (invisible)
+       - .is-hovering           : inset(0 0 0 0)    → full visible
+       - .underline-leaving     : inset(0 0 0 100%) → 0-width au RIGHT edge (invisible)
+       Animation reveal : default → .is-hovering = se révèle depuis la GAUCHE.
+       Animation leave  : .is-hovering → .underline-leaving = disparait vers la DROITE.
+       Au prochain enter, JS reset à default sans transition pour repartir de la GAUCHE. */
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path var(--t-med) var(--ease);
   }
-  .contact:hover::after,
-  .contact:focus-visible::after { transform: translateX(0); }
+  .contact.is-hovering::after { clip-path: inset(0 0 0 0); }
+  .contact.underline-leaving::after { clip-path: inset(0 0 0 100%); }
+  .contact.no-transition::after { transition: none; }
+  .contact:focus-visible::after { clip-path: inset(0 0 0 0); }
 
   /* ---------- Status (footer) ---------- */
   .status {
@@ -548,12 +570,21 @@
     inset: 0;
     border-radius: 50%;
     border: 1px solid var(--fg);
+    /* transform-origin center : le scale garde le ring centré sur le dot.
+       will-change : pousse la couche sur le compositor GPU dès le start. */
+    transform-origin: center;
+    will-change: transform, opacity;
     animation: pulse 2.4s ease-out infinite;
   }
+  /* Animation 100% composite (transform + opacity) → 60fps stable, pas de
+     jank "pixel par pixel". Avant : on animait `inset` (= top/right/bottom/
+     left), qui déclenche layout à chaque frame. Maintenant : scale 1→4
+     reproduit visuellement l'expansion 6px→24px (équivalent inset 0→-9px)
+     SANS toucher au layout. */
   @keyframes pulse {
-    0%   { inset: 0;    opacity: 0.5; }
+    0%   { transform: scale(1); opacity: 0.5; }
     60%  { opacity: 0; }
-    100% { inset: -9px; opacity: 0;   }
+    100% { transform: scale(4); opacity: 0; }
   }
 
   /* ---------- Footer rows ---------- */
@@ -565,6 +596,15 @@
   }
   .row.right { justify-content: flex-end; }
   .clock { font-variant-numeric: tabular-nums; }
+  /* Le `:` de l'heure clignote à 1Hz comme une horloge digitale.
+     step-end : maintient la valeur courante jusqu'à la prochaine keyframe
+     puis snap → blink franc 50/50 sans fade. */
+  .clock-colon {
+    animation: clock-blink 1s step-end infinite;
+  }
+  @keyframes clock-blink {
+    50% { opacity: 0; }
+  }
 
   /* ---------- Animations ---------- */
   @media (prefers-reduced-motion: reduce) {
@@ -577,6 +617,7 @@
       opacity: 1 !important;
       transform: none !important;
       animation: none !important;
+      pointer-events: auto !important;
     }
   }
 
@@ -602,9 +643,22 @@
   <!-- Définitions des filtres SVG (cachés, juste pour les <filter>) -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
-      <!-- Light mode : noise BLANC très atténué (alpha max ~0.12), screen blend.
-           Avec α=0.12 max, le pic le plus blanc fait juste passer le noir
-           (#0a0a0a) à environ #2a → noir resté noir, avec juste un peu de grain. -->
+      <!-- Mask du logo : la forme du highlight (face arrière du L iso) devient
+           un trou TRANSPARENT au lieu d'être rendue en fill var(--bg) opaque.
+           Comme ça, le bg-grain (z:-1) passe à travers la zone du highlight
+           au lieu d'être occulté. White = visible, black = invisible. Le rect
+           remplit tout le viewBox en visible, le polygon (= ancien
+           logo-highlight) découpe le trou. -->
+      <mask id="logo-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="633.2" height="583.04">
+        <rect x="0" y="0" width="633.2" height="583.04" fill="white"/>
+        <polygon points="527.65 315.29 527.71 44.09 105.62 220.38 105.65 356 211.14 311.98 211.14 583.04 316.6 539 316.64 267.96 422.14 223.93 422.14 494.92 633.19 403.1 633.2 271.21 527.65 315.29" fill="black"/>
+      </mask>
+      <!-- Grain "imprimé" appliqué au logo central uniquement.
+           Light mode : noise blanc en screen blend sur le L noir → spots
+                        blancs subtils (α max 0.13).
+           Dark mode  : noise noir en multiply blend sur le L blanc → spots
+                        sombres (α max 0.6).
+           Le seed est mis à jour à 12fps via JS pour donner l'effet pellicule. -->
       <filter id="grain-light" x="0" y="0" width="100%" height="100%">
         <feTurbulence id="grain-light-turb" type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch" seed="1" result="noise"/>
         <feColorMatrix in="noise" type="matrix"
@@ -615,37 +669,45 @@
         <feComposite in="whiteNoise" in2="SourceAlpha" operator="in" result="constrained"/>
         <feBlend in="SourceGraphic" in2="constrained" mode="screen"/>
       </filter>
-      <!-- Dark mode : noise NOIR très atténué, multiply blend. -->
       <filter id="grain-dark" x="0" y="0" width="100%" height="100%">
         <feTurbulence id="grain-dark-turb" type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch" seed="1" result="noise"/>
         <feColorMatrix in="noise" type="matrix"
           values="0 0 0 0 0
                   0 0 0 0 0
                   0 0 0 0 0
-                  0 0 0 0.9 -0.30" result="darkNoise"/>
+                  0 0 0 0.9 -0.45" result="darkNoise"/>
         <feComposite in="darkNoise" in2="SourceAlpha" operator="in" result="constrained"/>
         <feBlend in="SourceGraphic" in2="constrained" mode="multiply"/>
       </filter>
-      <!-- Grain spécifique au cursor : multiply (nécessaire sur du blanc pur)
-           MAIS avec les valeurs alpha DOUCES (0.3 -0.17 ≈ celles de grain-light)
-           pour que la densité visuelle après mix-blend-mode: difference soit
-           identique au grain du logo. -->
-      <filter id="grain-cursor" x="0" y="0" width="100%" height="100%">
-        <feTurbulence id="grain-cursor-turb" type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch" seed="1" result="noise"/>
+      <!-- Bg grain : couche sparse plein viewport derrière le contenu.
+           Un seul filter pour les deux thèmes :
+             - flood-color="currentColor" → couleur des dots = var(--fg)
+               (noir en light, blanc en dark).
+             - L'offset α du colorMatrix (-12 en light, -12.5 en dark) est
+               muté via JS au theme toggle et lerpé sur 700ms pour matcher
+               la durée du wipe (cf. IIFE "Bg grain offset transition").
+           colorMatrix initial à -12 (light), JS s'occupe du reste. -->
+      <filter id="bg-grain" x="0" y="0" width="100%" height="100%">
+        <feTurbulence id="bg-grain-turb" type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch" seed="1" result="noise"/>
         <feColorMatrix in="noise" type="matrix"
           values="0 0 0 0 0
                   0 0 0 0 0
                   0 0 0 0 0
-                  0 0 0 0.3 -0.17" result="cursorNoise"/>
-        <feComposite in="cursorNoise" in2="SourceAlpha" operator="in" result="constrained"/>
-        <feBlend in="SourceGraphic" in2="constrained" mode="multiply"/>
+                  0 0 0 15 -12" result="alphaOnly"/>
+        <feFlood flood-color="currentColor" result="floodColor"/>
+        <feComposite operator="in" in="floodColor" in2="alphaOnly" result="grainDots"/>
+        <feComposite operator="in" in="grainDots" in2="SourceAlpha"/>
       </filter>
     </defs>
   </svg>
 
-  <!-- Curseur custom (inspiration MIKII) : rond blanc qui suit la souris avec délai.
-       Hors de .page → mix-blend-mode: difference blend avec le bg du body.
-       Filtre grain appliqué directement sur le curseur. -->
+  <!-- Bg grain overlay : plein viewport, z:-1 → derrière tout le contenu de
+       .page mais au-dessus du body bg. Quelques dots var(--fg) par-ci par-là
+       comme des aberrations de pellicule. -->
+  <div class="bg-grain" aria-hidden="true"></div>
+
+  <!-- Curseur custom : petit point blanc avec mix-blend-mode: difference
+       pour s'inverser sur les éléments du site. Pas de grain (réservé au logo). -->
   <div class="cursor" aria-hidden="true"></div>
 
   <!-- Theme wipe : cercle qui scale plein écran avec backdrop-filter: invert(1)
@@ -660,20 +722,16 @@
         <span>Studio</span>
         <span class="mark" aria-hidden="true">
           <svg class="logo-svg" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <!-- Face 5 (triangle) en premier : rendu derrière les faces du L. -->
-            <polygon class="face-triangle" points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/>
-            <!-- Face 1 : top bar (horizontale haute) -->
-            <polygon class="face-top" points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/>
-            <!-- Face 2 : small left lip (entre top bar et tower) -->
-            <polygon class="face-lip" points="105.65 356 0 311.87 0 176.33 105.62 220.38"/>
-            <!-- Face 3 : left tower (longue verticale gauche) -->
-            <polygon class="face-tower" points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/>
-            <!-- Face 4 : middle T (verticale centrale) -->
-            <polygon class="face-middle" points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/>
-            <!-- Highlight (face arrière) EN DERNIER : rendu PAR DESSUS toutes les
-                 faces. Couleur var(--bg) → invisible contre le fond, mais "découpe"
-                 visuellement les faces qu'il chevauche. -->
-            <polygon class="logo-highlight" points="527.65 315.29 527.71 44.09 105.62 220.38 105.65 356 211.14 311.98 211.14 583.04 316.6 539 316.64 267.96 422.14 223.93 422.14 494.92 633.19 403.1 633.2 271.21 527.65 315.29"/>
+            <!-- Faces du L groupées sous le mask : la zone du highlight (face
+                 arrière iso) est carved en trou transparent → bg-grain visible
+                 à travers. -->
+            <g mask="url(#logo-mask)">
+              <polygon class="face-triangle" points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/>
+              <polygon class="face-top" points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/>
+              <polygon class="face-lip" points="105.65 356 0 311.87 0 176.33 105.62 220.38"/>
+              <polygon class="face-tower" points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/>
+              <polygon class="face-middle" points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/>
+            </g>
           </svg>
         </span>
       </a>
@@ -712,20 +770,17 @@
       <div class="stack">
         <div class="logo-center" aria-hidden="true">
           <svg class="logo-svg" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <!-- Face 5 (triangle) en premier : rendu derrière les faces du L. -->
-            <polygon class="face-triangle" points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/>
-            <!-- Face 1 : top bar (horizontale haute) -->
-            <polygon class="face-top" points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/>
-            <!-- Face 2 : small left lip (entre top bar et tower) -->
-            <polygon class="face-lip" points="105.65 356 0 311.87 0 176.33 105.62 220.38"/>
-            <!-- Face 3 : left tower (longue verticale gauche) -->
-            <polygon class="face-tower" points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/>
-            <!-- Face 4 : middle T (verticale centrale) -->
-            <polygon class="face-middle" points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/>
-            <!-- Highlight (face arrière) EN DERNIER : rendu PAR DESSUS toutes les
-                 faces. Couleur var(--bg) → invisible contre le fond, mais "découpe"
-                 visuellement les faces qu'il chevauche. -->
-            <polygon class="logo-highlight" points="527.65 315.29 527.71 44.09 105.62 220.38 105.65 356 211.14 311.98 211.14 583.04 316.6 539 316.64 267.96 422.14 223.93 422.14 494.92 633.19 403.1 633.2 271.21 527.65 315.29"/>
+            <!-- Faces du L groupées sous le mask : la zone du highlight (face
+                 arrière iso) est carved en trou transparent → bg-grain visible
+                 à travers. Les animations CSS (clip-path inset, transform)
+                 restent par face, le mask compose dessus sans interférer. -->
+            <g mask="url(#logo-mask)">
+              <polygon class="face-triangle" points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/>
+              <polygon class="face-top" points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/>
+              <polygon class="face-lip" points="105.65 356 0 311.87 0 176.33 105.62 220.38"/>
+              <polygon class="face-tower" points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/>
+              <polygon class="face-middle" points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/>
+            </g>
           </svg>
         </div>
 
@@ -748,7 +803,9 @@
       </div>
 
       <div class="row right meta">
-        <span>© 2026 Studio TL. Tous droits réservés.</span>
+        <span>© 2026<span class="meta-hide-mobile">&nbsp;Studio TL</span></span>
+        <span class="meta-hide-mobile" aria-hidden="true">–</span>
+        <span class="meta-hide-mobile">Tous droits réservés</span>
       </div>
     </footer>
 
@@ -796,6 +853,13 @@
       // 1. ICÔNE : on toggle .show-sun IMMÉDIATEMENT, sans attendre le wipe.
       //    L'animation sun↔moon démarre dès le clic.
       btn.classList.toggle('show-sun', target === 'dark');
+
+      // 2. Signal au bg-grain de démarrer sa transition d'offset PILE au
+      //    moment du clic (sinon le MutationObserver attend que apply()
+      //    set le data-theme à T+700ms et la transition arrive trop tard).
+      window.dispatchEvent(new CustomEvent('theme-will-change', {
+        detail: { target: target }
+      }));
 
       // Pas de wipe si reduce-motion ou si on n'a pas l'élément
       if (!wipe || reduced) {
@@ -854,7 +918,9 @@
         hh = String(d.getHours()).padStart(2, '0');
         mm = String(d.getMinutes()).padStart(2, '0');
       }
-      el.textContent = hh + ':' + mm + ' Lyon';
+      // innerHTML pour wrapper le `:` dans un span animable. Les valeurs hh/mm
+       // viennent de Intl.DateTimeFormat ou Date donc safe (pas d'injection).
+      el.innerHTML = hh + '<span class="clock-colon">:</span>' + mm + ' Lyon';
       if (aside) {
         var total = parseInt(hh, 10) * 60 + parseInt(mm, 10);
         var sleeping = total >= (22 * 60 + 30) || total < (6 * 60);
@@ -902,6 +968,36 @@
     window.addEventListener('mouseenter', function () { cursor.style.opacity = '1'; });
   })();
 
+  /* ---------- Mailto underline : reveal LEFT, leave RIGHT ----------
+     Comportement :
+      - mouseenter : si on était en train de "leaver" (clip à droite), on
+        reset SANS transition à l'état default (clip à gauche), puis on
+        applique .is-hovering → le reveal repart toujours DE LA GAUCHE.
+      - mouseleave : on retire .is-hovering et on ajoute .underline-leaving
+        → l'underline sort vers la DROITE.
+     Le double rAF + .no-transition évite tout retour visible quand on
+     "rewind" le clip de droite vers gauche avant le prochain reveal. */
+  (function () {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    var link = document.querySelector('.contact');
+    if (!link) return;
+    link.addEventListener('mouseenter', function () {
+      if (link.classList.contains('underline-leaving')) {
+        link.classList.add('no-transition');
+        link.classList.remove('underline-leaving');
+        // Force reflow → l'état "default" (clip à gauche) est appliqué
+        // sans transition avant qu'on retire .no-transition.
+        void link.offsetWidth;
+        link.classList.remove('no-transition');
+      }
+      link.classList.add('is-hovering');
+    });
+    link.addEventListener('mouseleave', function () {
+      link.classList.remove('is-hovering');
+      link.classList.add('underline-leaving');
+    });
+  })();
+
   /* ---------- Magnetic + cursor scale on hover ----------
      Helper appliqué à plusieurs cibles (mailto + toggle dark mode).
      Chaque cible : pull magnétique + .is-hover sur le cursor.
@@ -916,6 +1012,7 @@
       opts = opts || {};
       var divisor = opts.divisor || 6;
       var useIndividualTransform = opts.useIndividualTransform || false;
+      var hoverClass = opts.hoverClass || 'is-hover';
       var lx = 0, ly = 0, tx = 0, ty = 0, raf = null, active = false;
 
       function applyPos() {
@@ -937,13 +1034,13 @@
 
       el.addEventListener('mouseenter', function () {
         active = true;
-        if (cursor) cursor.classList.add('is-hover');
+        if (cursor) cursor.classList.add(hoverClass);
         request();
       });
       el.addEventListener('mouseleave', function () {
         active = false;
         tx = 0; ty = 0;
-        if (cursor) cursor.classList.remove('is-hover');
+        if (cursor) cursor.classList.remove(hoverClass);
         request();
       });
       window.addEventListener('mousemove', function (e) {
@@ -958,34 +1055,107 @@
     }
 
     magnetize(document.querySelector('.contact'), { divisor: 6 });
-    // Toggle : divisor plus petit car bouton plus petit (sinon pull invisible).
-    // useIndividualTransform = true → on touche style.translate, pas .transform,
-    // pour ne pas écraser le scale: 1.1 du :hover en CSS.
+    // Toggle : pull magnétique + cursor élargi (is-hover-lg, 45px) pour
+    // accentuer la zone. useIndividualTransform → on touche style.translate
+    // (pas .transform) pour ne pas écraser le scale: 1.1 du :hover en CSS.
     magnetize(document.getElementById('themeToggle'), {
       divisor: 4,
-      useIndividualTransform: true
+      useIndividualTransform: true,
+      hoverClass: 'is-hover-lg'
     });
   })();
 
-  /* ---------- Grain animation ----------
-     Met à jour le seed des trois filtres turbulence (light/dark/cursor) à
-     ~12 fps pour l'effet pellicule. Tous synchronisés sur le même seed
-     → grain cohérent partout. */
+  /* ---------- Bg grain offset transition ----------
+     Le bg-grain a un threshold différent par thème (-12 light, -12.5 dark)
+     pour ajuster la densité perçue. JS mute l'offset du colorMatrix au
+     theme toggle et lerpe sur 700ms (= WIPE_DURATION) avec un ease-out
+     cubic. Pendant la transition, le filter recompute à chaque frame
+     (full viewport) → coût élevé mais éphémère et rare. Au load, snap
+     direct sur la valeur du thème courant.
+     MutationObserver sur documentElement.class (.is-dark) → détecte tous
+     les changements de thème (bouton, prefers-color-scheme), pas besoin
+     de coupler au code du toggle. */
   (function () {
-    var lightTurb  = document.getElementById('grain-light-turb');
-    var darkTurb   = document.getElementById('grain-dark-turb');
-    var cursorTurb = document.getElementById('grain-cursor-turb');
-    if (!lightTurb && !darkTurb && !cursorTurb) return;
-    var FPS = 12;
-    var INTERVAL = 1000 / FPS;
-    var lastT = 0;
+    var matrix = document.querySelector('#bg-grain feColorMatrix');
+    if (!matrix) return;
+    var LIGHT = -12, DARK = -12.5;
+    var DURATION = 700;
+    function setOffset(off) {
+      matrix.setAttribute('values',
+        '0 0 0 0 0\n' +
+        '0 0 0 0 0\n' +
+        '0 0 0 0 0\n' +
+        '0 0 0 15 ' + off);
+    }
+    function isDark() { return document.documentElement.classList.contains('is-dark'); }
+    function targetFor(dark) { return dark ? DARK : LIGHT; }
+
+    var current = targetFor(isDark());
+    setOffset(current);
+
+    var raf = null;
+    function animate(to) {
+      if (raf) cancelAnimationFrame(raf);
+      var from = current;
+      var startT = null;
+      function step(t) {
+        if (startT === null) startT = t;
+        var p = Math.min(1, (t - startT) / DURATION);
+        var eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+        current = from + (to - from) * eased;
+        setOffset(current);
+        if (p < 1) raf = requestAnimationFrame(step);
+        else raf = null;
+      }
+      raf = requestAnimationFrame(step);
+    }
+
+    var lastDark = isDark();
+    // Event direct au clic du toggle → animation démarre PILE avec le wipe.
+    // On sync lastDark pour que le MutationObserver (qui fire à T+700ms
+    // quand apply() set la classe) skip et ne re-déclenche pas l'anim.
+    window.addEventListener('theme-will-change', function (e) {
+      var dark = e.detail.target === 'dark';
+      if (dark === lastDark) return;
+      animate(targetFor(dark));
+      lastDark = dark;
+    });
+    // Fallback : observer la classe pour les autres déclencheurs (changement
+    // de prefers-color-scheme système, etc.).
+    new MutationObserver(function () {
+      var nowDark = isDark();
+      if (nowDark !== lastDark) {
+        animate(targetFor(nowDark));
+        lastDark = nowDark;
+      }
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+  })();
+
+  /* ---------- Grain animation ----------
+     Logo : seed mis à jour à 12fps → shimmer pellicule cinéma.
+     Bg-grain : seed mis à jour à 6fps (moitié) → le full viewport est
+     ~55× plus lourd que le logo, donc on espace les recomputes pour
+     garder l'effet vivant sans cramer le CPU/GPU. */
+  (function () {
+    var logoTurbs = [
+      document.getElementById('grain-light-turb'),
+      document.getElementById('grain-dark-turb')
+    ].filter(Boolean);
+    var bgTurb = document.getElementById('bg-grain-turb');
+    if (!logoTurbs.length && !bgTurb) return;
+
+    var LOGO_INTERVAL = 1000 / 12;
+    var BG_INTERVAL = 1000 / 6;
+    var lastLogo = 0, lastBg = 0;
     function tick(t) {
-      if (t - lastT >= INTERVAL) {
+      if (logoTurbs.length && t - lastLogo >= LOGO_INTERVAL) {
         var seed = Math.floor(Math.random() * 1000);
-        if (lightTurb)  lightTurb.setAttribute('seed', seed);
-        if (darkTurb)   darkTurb.setAttribute('seed', seed);
-        if (cursorTurb) cursorTurb.setAttribute('seed', seed);
-        lastT = t;
+        for (var i = 0; i < logoTurbs.length; i++) logoTurbs[i].setAttribute('seed', seed);
+        lastLogo = t;
+      }
+      if (bgTurb && t - lastBg >= BG_INTERVAL) {
+        bgTurb.setAttribute('seed', Math.floor(Math.random() * 1000));
+        lastBg = t;
       }
       requestAnimationFrame(tick);
     }

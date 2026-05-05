@@ -12,6 +12,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Minify HTML + CSS inline + JS inline en une passe.
+      # html-minifier-terser embarque cssnano (--minify-css) et terser
+      # (--minify-js). On overwrite index.html → la version qui part en
+      # FTP est la version compressée. Le repo source reste commenté.
+      - name: Minify index.html
+        run: |
+          npm install --no-save --no-package-lock html-minifier-terser
+          npx html-minifier-terser index.html \
+            --collapse-whitespace \
+            --remove-comments \
+            --minify-css true \
+            --minify-js true \
+            --remove-redundant-attributes \
+            --remove-script-type-attributes \
+            --remove-style-link-type-attributes \
+            --use-short-doctype \
+            --decode-entities \
+            -o index.min.html
+          mv index.min.html index.html
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -32,3 +57,5 @@ jobs:
             **/.vscode/**
             README.md
             .gitignore
+            package.json
+            package-lock.json
