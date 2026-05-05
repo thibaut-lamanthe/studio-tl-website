@@ -9,6 +9,16 @@
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
 
+<!-- Preload des fonts critiques : démarre le fetch en parallèle du parsing
+     HTML, sans attendre que les @font-face du <style> soient évalués.
+     Réduit drastiquement le FOUT (flash de fallback font) sur la prod où
+     la latence réseau rend le délai visible.
+     `crossorigin` est REQUIS pour les fonts même same-origin (spec).
+     `type="font/woff2"` indique au browser qu'il peut zapper le sniffing. -->
+<link rel="preload" href="assets/fonts/NeueMontreal-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/NeueMontreal-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/NeueMontreal-Bold.woff2" as="font" type="font/woff2" crossorigin>
+
 <!-- Inline script SYNCHRONE pour appliquer le bon thème AVANT le paint.
      Sans ça, on a un FOUC : la page se charge en light (défaut CSS), puis
      le JS du body détecte prefers-color-scheme: dark et bascule, créant un
@@ -195,7 +205,7 @@
   }
 
   .meta {
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1;
     letter-spacing: 0.02em;
     color: var(--fg);
@@ -207,7 +217,7 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    font-size: 18px;
+    font-size: 20px;
     letter-spacing: 0.02em;
     color: var(--fg);
     font-weight: 700;
@@ -498,7 +508,7 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    font-size: clamp(13px, 1.2vw, 18px);
+    font-size: 20px;
     font-weight: 500;
     color: var(--fg);
     /* Pas d'animation sur le wrapper — chaque ligne a son propre fade-in. */
@@ -621,10 +631,14 @@
     }
   }
 
-  /* ---------- Responsive ---------- */
+  /* ---------- Responsive ----------
+     Mobile : ratio ~80% pour garder la hiérarchie (header = center,
+     footer un cran en dessous). Desktop & tablette restent au défaut. */
   @media (max-width: 640px) {
     .meta-hide-mobile { display: none; }
-    .info { gap: 10px; font-size: 13px; }
+    .brand { font-size: 16px; }
+    .meta { font-size: 13px; }
+    .info { gap: 10px; font-size: 16px; }
     .row { gap: 8px; }
   }
   @media (max-width: 420px) {
