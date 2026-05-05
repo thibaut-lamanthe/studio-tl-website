@@ -15,3 +15,6 @@
 
 # Dependencies (au cas où)
 node_modules/
+
+# Build output (généré par build.js, ne doit pas être commit)
+dist/

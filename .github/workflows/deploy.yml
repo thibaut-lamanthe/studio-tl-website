@@ -17,14 +17,20 @@ jobs:
         with:
           node-version: '20'
 
-      # Minify HTML + CSS inline + JS inline en une passe.
-      # html-minifier-terser embarque cssnano (--minify-css) et terser
-      # (--minify-js). On overwrite index.html → la version qui part en
-      # FTP est la version compressée. Le repo source reste commenté.
-      - name: Minify index.html
+      # Build i18n : génère dist/index.html (FR) + dist/en/index.html (EN)
+      # + dist/.htaccess + copie dist/assets/ depuis assets/.
+      - name: Build i18n (FR + EN)
+        run: node build.js
+
+      # Minify les deux versions HTML (CSS + JS inline inclus).
+      # Le repo source garde son code commenté ; ce qui part en FTP est
+      # la version compressée.
+      - name: Install minifier
+        run: npm install --no-save --no-package-lock html-minifier-terser
+
+      - name: Minify FR
         run: |
-          npm install --no-save --no-package-lock html-minifier-terser
-          npx html-minifier-terser index.html \
+          npx html-minifier-terser dist/index.html \
             --collapse-whitespace \
             --remove-comments \
             --minify-css true \
@@ -34,8 +40,23 @@ jobs:
             --remove-style-link-type-attributes \
             --use-short-doctype \
             --decode-entities \
-            -o index.min.html
-          mv index.min.html index.html
+            -o dist/index.min.html
+          mv dist/index.min.html dist/index.html
+
+      - name: Minify EN
+        run: |
+          npx html-minifier-terser dist/en/index.html \
+            --collapse-whitespace \
+            --remove-comments \
+            --minify-css true \
+            --minify-js true \
+            --remove-redundant-attributes \
+            --remove-script-type-attributes \
+            --remove-style-link-type-attributes \
+            --use-short-doctype \
+            --decode-entities \
+            -o dist/en/index.min.html
+          mv dist/en/index.min.html dist/en/index.html
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -46,16 +67,7 @@ jobs:
           protocol: ftp
           port: 21
           server-dir: ${{ secrets.FTP_REMOTE_DIR }}
-          # Synchro incrémentale : seuls les fichiers modifiés sont uploadés
-          # (l'action garde un manifeste .ftp-deploy-sync-state.json côté serveur)
+          # On déploie le contenu de dist/ uniquement.
+          local-dir: ./dist/
           exclude: |
-            **/.git*
-            **/.git*/**
-            **/.github/**
-            **/node_modules/**
             **/.DS_Store
-            **/.vscode/**
-            README.md
-            .gitignore
-            package.json
-            package-lock.json

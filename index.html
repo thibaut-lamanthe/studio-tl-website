@@ -899,30 +899,50 @@
     });
   })();
 
-  /* ---------- Lyon local clock + status nocturne ---------- */
+  /* ---------- Lyon local clock + status nocturne ----------
+     Format de l'heure dépend de <html lang> :
+       - fr → 24h, ex: "14:30 Lyon"
+       - en → 12h avec AM/PM, ex: "2:30 PM Lyon"
+     La logique "sleeping" reste en 24h interne quel que soit le format
+     d'affichage. Le texte du status nocturne (' (mais là, je dors)') est
+     remplacé pour la version EN par le build i18n. */
   (function () {
     var el = document.getElementById('clock');
     var aside = document.getElementById('statusAside');
     if (!el) return;
+    var lang = document.documentElement.lang === 'en' ? 'en' : 'fr';
     function tick() {
-      var hh, mm;
+      var d = new Date();
+      var lyonH = 0, lyonM = 0;
       try {
+        // Toujours fr-FR + hour12:false ici → on récupère l'heure de Lyon
+        // en format 24h, peu importe la langue d'affichage. La conversion
+        // 12h se fait après pour EN.
         var parts = new Intl.DateTimeFormat('fr-FR', {
           timeZone: 'Europe/Paris',
           hour: '2-digit', minute: '2-digit', hour12: false
-        }).formatToParts(new Date());
-        hh = parts.find(function (p) { return p.type === 'hour'; }).value;
-        mm = parts.find(function (p) { return p.type === 'minute'; }).value;
+        }).formatToParts(d);
+        lyonH = parseInt(parts.find(function (p) { return p.type === 'hour'; }).value, 10);
+        lyonM = parseInt(parts.find(function (p) { return p.type === 'minute'; }).value, 10);
       } catch (e) {
-        var d = new Date();
-        hh = String(d.getHours()).padStart(2, '0');
-        mm = String(d.getMinutes()).padStart(2, '0');
+        lyonH = d.getHours();
+        lyonM = d.getMinutes();
       }
-      // innerHTML pour wrapper le `:` dans un span animable. Les valeurs hh/mm
-       // viennent de Intl.DateTimeFormat ou Date donc safe (pas d'injection).
-      el.innerHTML = hh + '<span class="clock-colon">:</span>' + mm + ' Lyon';
+      var mm = String(lyonM).padStart(2, '0');
+      var hh, ampm = '';
+      if (lang === 'en') {
+        // 12h : "12:40 PM", "1:05 AM" (pas de leading zero sur les heures
+        // en convention US, contrairement aux minutes qui restent paddées).
+        hh = String(lyonH % 12 || 12);
+        ampm = ' ' + (lyonH >= 12 ? 'PM' : 'AM');
+      } else {
+        hh = String(lyonH).padStart(2, '0');
+      }
+      // innerHTML pour wrapper le `:` dans un span animable. hh/mm/ampm
+      // viennent de Intl/Date donc safe (pas d'injection).
+      el.innerHTML = hh + '<span class="clock-colon">:</span>' + mm + ampm + ' Lyon';
       if (aside) {
-        var total = parseInt(hh, 10) * 60 + parseInt(mm, 10);
+        var total = lyonH * 60 + lyonM;
         var sleeping = total >= (22 * 60 + 30) || total < (6 * 60);
         aside.textContent = sleeping ? ' (mais là, je dors)' : '';
       }
