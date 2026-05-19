@@ -180,8 +180,9 @@
     letter-spacing: -0.01em;
     transition: background-color 500ms var(--ease), color 500ms var(--ease);
     overflow: hidden;
+    cursor: default; /* Pas de I-beam sur le texte normal */
   }
-  a { color: inherit; text-decoration: none; }
+  a { color: inherit; text-decoration: none; cursor: pointer; }
   button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
   /* Sélection de texte : bg = couleur d'encre, text = couleur de fond
      → en light mode : bg noir / text blanc, en dark mode : bg blanc / text noir. */
@@ -236,7 +237,7 @@
                 height 280ms var(--ease);
     will-change: translate;
   }
-  .cursor.is-hover { --cursor-size: 24px; }
+  .cursor.is-hover { --cursor-size: 36px; }
   /* Hover spécifique au toggle dark mode : cursor plus large pour
      accentuer la zone interactive (le toggle est plus gros que le mailto). */
   .cursor.is-hover-lg { --cursor-size: 45px; }
@@ -247,16 +248,18 @@
 
   /* ---------- Grain "imprimé" (logo principal uniquement) ----------
      Mono-grain : un seul filtre, dots floodés en var(--bg) (= couleur
-     opposée au L body). Le L body est rendu en var(--fg) via fill
-     direct sur les polygons (override le currentColor inheritance).
-     Les deux variables lerpent au theme toggle via CSS → grain change
-     de couleur smoothly avec le L body. */
+     opposée au L body). Le flood-color est set DIRECTEMENT en CSS sur
+     le feFlood (pas via currentColor) parce que currentColor dans un
+     feFlood résout au color du contexte du <filter> (= body color =
+     var(--fg)), pas au color de l'élément qui utilise le filter. */
   .logo-center .logo-svg {
-    color: var(--bg);
     filter: url(#grain);
   }
   .logo-center .logo-svg polygon {
     fill: var(--fg);
+  }
+  #grain feFlood {
+    flood-color: var(--bg);
   }
 
   /* ---------- Bg grain (sparse, plein viewport, statique) ----------
@@ -799,7 +802,7 @@
           values="0 0 0 0 0
                   0 0 0 0 0
                   0 0 0 0 0
-                  0 0 0 0.6 -0.30" result="alphaMatte"/>
+                  0 0 0 0.9 -0.45" result="alphaMatte"/>
         <feFlood flood-color="currentColor" result="floodColor"/>
         <feComposite operator="in" in="floodColor" in2="alphaMatte" result="dotsRaw"/>
         <feComposite operator="in" in="dotsRaw" in2="SourceAlpha" result="dotsOnL"/>
