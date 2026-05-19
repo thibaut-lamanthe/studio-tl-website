@@ -85,6 +85,12 @@ enVersion = injectHead(enVersion, 'en/');
 const htaccess = [
   'RewriteEngine On',
   '',
+  '# Canonicalisation : tout host ≠ www.studiotl.fr → 301 vers le host canonique.',
+  '# Couvre studiotl.fr (apex), studio-tl.fr, thibautlamanthe.com, thibautlamanthe.fr',
+  '# et leurs variantes www. Le path est conservé via $1.',
+  'RewriteCond %{HTTP_HOST} !^www\\.studiotl\\.fr$ [NC]',
+  'RewriteRule ^(.*)$ https://www.studiotl.fr/$1 [R=301,L]',
+  '',
   '# Skip bots : ils crawlent les URLs explicitement, hreflang les guide',
   'RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|yandex|baiduspider|duckduckbot|slurp|applebot|facebot) [NC]',
   'RewriteRule .* - [L]',
