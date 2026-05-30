@@ -1,0 +1,15 @@
+{
+  "name": "studio-tl-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site statique Studio TL",
+  "scripts": {
+    "build": "node build.js",
+    "minify": "node scripts/minify-html.js",
+    "verify": "node scripts/verify-build.js",
+    "deploy:prepare": "npm run build && npm run verify && npm run minify && npm run verify"
+  },
+  "devDependencies": {
+    "html-minifier-terser": "7.2.0"
+  }
+}

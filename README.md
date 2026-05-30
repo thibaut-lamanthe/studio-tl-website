@@ -20,9 +20,22 @@ Site personnel statique (HTML/CSS/JS).
 
 ## Développement local
 
-Soit ouvrir `index.html` directement dans un navigateur, soit lancer un petit serveur :
+Installer les dépendances :
 
 ```bash
+npm install
+```
+
+Générer la version de production locale :
+
+```bash
+npm run deploy:prepare
+```
+
+Soit ouvrir `index.html` directement dans un navigateur pour travailler sur la source, soit lancer un petit serveur depuis `dist/` après build :
+
+```bash
+cd dist
 python3 -m http.server 8000
 # puis http://localhost:8000
 ```
