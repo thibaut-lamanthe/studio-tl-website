@@ -1,58 +1,48 @@
 # Studio TL — Website
 
-Personal static website (HTML/CSS/JS).
+Personal one-page website for Studio TL (UI/UX freelance, Lyon). Plain HTML/CSS/JS — no framework, no database.
 
-- 🌐 **Production**: [www.studiotl.fr](https://www.studiotl.fr)
-- 🏠 **Hosting**: Infomaniak
-- 🚀 **Deployment**: automatic via GitHub Actions (FTPS) on every push to `main`
+**Live:** [www.studiotl.fr](https://www.studiotl.fr)
 
-## Structure
+## How it works
 
-```
-.
-├── index.html              # Single page (inline CSS + JS)
-├── assets/
-│   ├── logo.svg
-│   └── fonts/              # Neue Montreal (4 woff2)
-└── .github/workflows/
-    └── deploy.yml          # Automatic FTPS deploy to Infomaniak
-```
+The site is authored as a single French source file, [index.html](index.html), with inline CSS and JS. A small Node build ([build.js](build.js)) turns it into the bilingual site that ships to production:
+
+- `dist/index.html` — French version, served at `/`
+- `dist/en/index.html` — English version, served at `/en/` (strings translated via [i18n.json](i18n.json))
+- `.htaccess`, `robots.txt`, `sitemap.xml` — language routing (`Accept-Language` → `/en/`), canonical redirects and SEO
+- everything minified (comments stripped, so the commented source stays readable in the repo)
+
+Assets — the SVG logo and the self-hosted Neue Montreal fonts (woff2) — live in `assets/`.
 
 ## Local development
 
-Install dependencies:
-
 ```bash
-npm install
+npm install            # installs the only build dependency (html-minifier-terser)
+npm run deploy:prepare # build + verify + minify into dist/
 ```
 
-Generate the local production build:
+To iterate on the site, edit `index.html` and open it directly in a browser. To preview the exact production output, serve `dist/` after building:
 
 ```bash
-npm run deploy:prepare
+cd dist && python3 -m http.server 8000   # then http://localhost:8000
 ```
 
-Either open `index.html` directly in a browser to work on the source, or run a small server from `dist/` after building:
-
-```bash
-cd dist
-python3 -m http.server 8000
-# then http://localhost:8000
-```
+When you change a translatable string, update `i18n.json` (FR → EN) so the English version stays in sync.
 
 ## Deployment
 
-Every `git push` to the `main` branch triggers an automatic deploy to Infomaniak over FTPS (GitHub Actions).
+Every push to `main` triggers a GitHub Actions workflow ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)) that builds `dist/` and uploads it to Infomaniak over FTP — no manual step. To re-run it by hand: **Actions → Deploy to Infomaniak → Run workflow**.
 
-To force a manual deploy: **Actions** tab on GitHub → **Deploy to Infomaniak** workflow → **Run workflow**.
+### Configuration — GitHub secrets
 
-### Required GitHub secrets
+The deploy workflow needs FTP credentials to reach the Infomaniak server. These are stored as GitHub **repository secrets** rather than committed to the repo — so the password never ends up in the (public) source, and the automated deploy can still authenticate. The workflow references them by name; without them the deploy fails at the login step.
 
-Configure once under **Settings → Secrets and variables → Actions**:
+Set them once under **Settings → Secrets and variables → Actions**:
 
-| Secret           | Example                       |
-| ---------------- | ----------------------------- |
-| `FTP_SERVER`     | `ftp.infomaniak.com`          |
-| `FTP_USERNAME`   | Infomaniak FTP username       |
-| `FTP_PASSWORD`   | FTP password                  |
-| `FTP_REMOTE_DIR` | `/sites/yourdomain.com/` or `/` depending on your config |
+| Secret           | What it is                                        |
+| ---------------- | ------------------------------------------------- |
+| `FTP_SERVER`     | FTP host, e.g. `ftp.infomaniak.com`               |
+| `FTP_USERNAME`   | FTP account username                              |
+| `FTP_PASSWORD`   | FTP account password                              |
+| `FTP_REMOTE_DIR` | Target directory on the server, e.g. `/`          |
