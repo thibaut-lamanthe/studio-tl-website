@@ -7,8 +7,8 @@
 <meta name="description" content="Studio TL — Thibaut Lamanthe, designer UI/UX et développeur freelance basé à Lyon. Digital sur-mesure." />
 <meta name="robots" content="index, follow" />
 
-<!-- Favicons : SVG en priorité (browsers modernes), PNG 512 pour Google
-     SERP (qui exige ≥ 48×48 multiple de 48), apple-touch 180 pour iOS. -->
+<!-- Favicons: SVG first (modern browsers), PNG 512 for Google
+     SERP (which requires ≥ 48×48, multiple of 48), apple-touch 180 for iOS. -->
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
 <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
@@ -16,8 +16,8 @@
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
 
-<!-- Open Graph (preview Slack / LinkedIn / iMessage / etc.). og:url et
-     og:locale sont swappés par build.js pour la version EN. -->
+<!-- Open Graph (preview Slack / LinkedIn / iMessage / etc.). og:url and
+     og:locale are swapped by build.js for the EN version. -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Studio TL" />
 <meta property="og:url" content="https://www.studiotl.fr/" />
@@ -30,16 +30,16 @@
 <meta property="og:locale" content="fr_FR" />
 <meta property="og:locale:alternate" content="en_US" />
 
-<!-- Twitter Card (X / Slack utilisent aussi ces tags) -->
+<!-- Twitter Card (X / Slack also use these tags) -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Studio TL — Digital sur-mesure, Lyon" />
 <meta name="twitter:description" content="Studio TL — Thibaut Lamanthe, designer UI/UX et développeur freelance basé à Lyon. Digital sur-mesure." />
 <meta name="twitter:image" content="https://www.studiotl.fr/assets/og-image.png" />
 
-<!-- Structured data : Person + Organization + WebSite. Permet à Google
-     de comprendre "Thibaut Lamanthe = personne réelle, Studio TL = sa
-     marque, basés à Lyon" → meilleur rendu SERP, knowledge panel
-     possible quand on cherche le nom. -->
+<!-- Structured data: Person + Organization + WebSite. Lets Google
+     understand "Thibaut Lamanthe = real person, Studio TL = his
+     brand, based in Lyon" → better SERP rendering, knowledge panel
+     possible when searching the name. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -84,20 +84,20 @@
 }
 </script>
 
-<!-- Preload des fonts critiques : démarre le fetch en parallèle du parsing
-     HTML, sans attendre que les @font-face du <style> soient évalués.
-     Réduit drastiquement le FOUT (flash de fallback font) sur la prod où
-     la latence réseau rend le délai visible.
-     `crossorigin` est REQUIS pour les fonts même same-origin (spec).
-     `type="font/woff2"` indique au browser qu'il peut zapper le sniffing. -->
+<!-- Preload critical fonts: starts the fetch in parallel with HTML
+     parsing, without waiting for the <style> @font-face to be evaluated.
+     Drastically reduces FOUT (flash of fallback font) on prod where
+     network latency makes the delay visible.
+     `crossorigin` is REQUIRED for fonts even same-origin (spec).
+     `type="font/woff2"` tells the browser it can skip sniffing. -->
 <link rel="preload" href="assets/fonts/NeueMontreal-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/NeueMontreal-Medium.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/NeueMontreal-Bold.woff2" as="font" type="font/woff2" crossorigin>
 
-<!-- Inline script SYNCHRONE pour appliquer le bon thème AVANT le paint.
-     Sans ça, on a un FOUC : la page se charge en light (défaut CSS), puis
-     le JS du body détecte prefers-color-scheme: dark et bascule, créant un
-     flash light → dark visible à l'œil. Ici on prend l'avance. -->
+<!-- SYNCHRONOUS inline script to apply the right theme BEFORE the paint.
+     Without it, we get a FOUC: the page loads in light (CSS default), then
+     the body JS detects prefers-color-scheme: dark and switches, creating a
+     light → dark flash visible to the eye. Here we get ahead of it. -->
 <script>
   (function() {
     try {
@@ -112,7 +112,7 @@
 
 <style>
   /* ---------- Neue Montreal (self-hosted, woff2) ----------
-     Light (300) supprimé : non utilisé. Trois weights chargés : Regular (400),
+     Light (300) removed: unused. Three weights loaded: Regular (400),
      Medium (500), Bold (700). */
   @font-face {
     font-family: "Neue Montreal";
@@ -180,41 +180,41 @@
     letter-spacing: -0.01em;
     transition: background-color 500ms var(--ease), color 500ms var(--ease);
     overflow: hidden;
-    cursor: default; /* Pas de I-beam sur le texte normal */
+    cursor: default; /* No I-beam on normal text */
   }
   a { color: inherit; text-decoration: none; cursor: pointer; }
   button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-  /* Sélection de texte : bg = couleur d'encre, text = couleur de fond
-     → en light mode : bg noir / text blanc, en dark mode : bg blanc / text noir. */
+  /* Text selection: bg = ink color, text = background color
+     → in light mode: bg black / text white, in dark mode: bg white / text black. */
   ::selection { background: var(--fg); color: var(--bg); }
   ::-moz-selection { background: var(--fg); color: var(--bg); }
 
   /* ---------- Layout ---------- */
   .page {
     position: relative;
-    /* Pas de z-index ni filter ici → .page ne crée pas de stacking context.
-       Ses enfants (header, .info, .logo-center, footer) participent donc au
-       stacking context du body, ce qui permet :
-        - de leur donner un z-index relatif au cursor
-        - au cursor de blender (mix-blend-mode: difference) avec eux */
+    /* No z-index or filter here → .page does not create a stacking context.
+       Its children (header, .info, .logo-center, footer) therefore participate
+       in the body's stacking context, which allows:
+        - giving them a z-index relative to the cursor
+        - the cursor to blend (mix-blend-mode: difference) with them */
     min-height: 100svh;
-    /* Flex column avec justify-content: space-between → header tout en haut,
-       footer tout en bas. main.stage est en position: absolute (hors flux
-       flex) et centré sur le viewport via inset:0 + place-items:center →
-       le contenu central est toujours pile au milieu vertical de la page,
-       indépendamment des hauteurs respectives header/footer (sinon, comme
-       le header est plus grand, le centre du grid 1fr serait décalé). */
+    /* Flex column with justify-content: space-between → header at the very top,
+       footer at the very bottom. main.stage is position: absolute (out of the
+       flex flow) and centered on the viewport via inset:0 + place-items:center →
+       the central content is always exactly at the vertical middle of the page,
+       regardless of the respective header/footer heights (otherwise, since
+       the header is larger, the center of the 1fr grid would be offset). */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     padding: var(--pad-y) var(--pad-x);
   }
 
-  /* ---------- Curseur custom ----------
-     Petit point blanc (12px, 36px au hover) qui suit la souris avec lerp.
-     mix-blend-mode: difference → couleur s'inverse selon ce qu'il y a
-     derrière (noir sur bg clair, blanc sur bg sombre, et inversion sur les
-     textes / icônes / SVG du header / footer / toggle / logo). */
+  /* ---------- Custom cursor ----------
+     Small white dot (12px, 36px on hover) that follows the mouse with lerp.
+     mix-blend-mode: difference → color inverts depending on what's
+     behind it (black on light bg, white on dark bg, and inversion over the
+     text / icons / SVG of the header / footer / toggle / logo). */
   .cursor {
     position: fixed;
     top: 0;
@@ -226,8 +226,8 @@
     pointer-events: none;
     mix-blend-mode: difference;
     z-index: 2;
-    /* translate (individual) pour la position via JS, transform pour centrer
-       la cible sur la souris (50% de la taille courante, auto-scale avec --cursor-size). */
+    /* translate (individual) for the position via JS, transform to center
+       the target on the mouse (50% of the current size, auto-scale with --cursor-size). */
     translate: -200px -200px;
     transform: translate(-50%, -50%);
     opacity: 0;
@@ -237,18 +237,18 @@
     will-change: translate;
   }
   .cursor.is-hover { --cursor-size: 36px; }
-  /* Hover spécifique au toggle dark mode : cursor plus large pour
-     accentuer la zone interactive (le toggle est plus gros que le mailto). */
+  /* Hover specific to the dark mode toggle: larger cursor to
+     accentuate the interactive zone (the toggle is bigger than the mailto). */
   .cursor.is-hover-lg { --cursor-size: 45px; }
-  /* Sur tablette / téléphone : pas de curseur custom */
+  /* On tablet / phone: no custom cursor */
   @media (hover: none), (pointer: coarse) {
     .cursor { display: none; }
   }
 
-  /* ---------- Logo central ----------
-     Le L body est rendu en var(--fg) via fill direct sur les polygons
-     (override le currentColor inheritance) → la couleur lerpe au theme
-     toggle via la transition CSS. */
+  /* ---------- Center logo ----------
+     The L body is rendered in var(--fg) via direct fill on the polygons
+     (overrides the currentColor inheritance) → the color lerps on theme
+     toggle via the CSS transition. */
   .logo-center .logo-svg polygon {
     fill: var(--fg);
   }
@@ -269,11 +269,11 @@
   }
 
   /* ---------- Brand mark (top-left) ----------
-     Padding + margin négatifs symétriques au toggle : non pas pour le hit
-     area (c'est un simple <div>, pas de clic), mais pour donner au brand
-     les mêmes dimensions de box que le toggle. Sans ça, la brand serait
-     plus courte verticalement → flex align-items: center du header.bar
-     ne ferait pas matcher le visuel "Studio" + mark avec le SVG du toggle. */
+     Padding + negative margin symmetric to the toggle: not for the hit
+     area (it's a plain <div>, no click), but to give the brand
+     the same box dimensions as the toggle. Without it, the brand would be
+     shorter vertically → the header.bar flex align-items: center
+     would not match the "Studio" + mark visual with the toggle SVG. */
   .brand {
     display: inline-flex;
     align-items: center;
@@ -294,22 +294,22 @@
   .brand .mark svg { width: 100%; height: 100%; display: block; }
 
   /* ---------- Theme toggle (top-right) ----------
-     Bouton circulaire avec un SVG sun/moon qui se transforme :
-     - light mode → sun (cercle plein + rayons)
-     - dark mode  → moon (cercle plein avec un mask qui taille le croissant)
-     Animation CSS via cx (de la circle du mask) + scale (du sun) + rotate (des beams).
-     Source d'inspiration : "Sun & Moon Theme Toggle" d'Adam Argyle. */
+     Circular button with a sun/moon SVG that transforms:
+     - light mode → sun (solid circle + beams)
+     - dark mode  → moon (solid circle with a mask that carves the crescent)
+     CSS animation via cx (of the mask circle) + scale (of the sun) + rotate (of the beams).
+     Inspiration source: "Sun & Moon Theme Toggle" by Adam Argyle. */
   .toggle {
     border-radius: 50%;
     border: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    /* Padding 12px tout autour → zone de hover/clic élargie de 12px de
-       chaque côté du SVG. margin-right/-top: -12px compensent les paddings
-       correspondants → le visuel du SVG reste aligné avec le bord droit
-       ET le bord haut de la page (sinon il serait décalé de 12px vers
-       l'intérieur par rapport à l'origine). */
+    /* Padding 12px all around → hover/click zone widened by 12px on
+       each side of the SVG. margin-right/-top: -12px compensate for the
+       corresponding paddings → the SVG visual stays aligned with the right edge
+       AND the top edge of the page (otherwise it would be offset 12px
+       inward relative to the origin). */
     padding: 12px;
     margin-right: -12px;
     margin-top: -12px;
@@ -333,44 +333,44 @@
     stroke-width: 2px;
     stroke-linecap: round;
   }
-  /* État par défaut (= light mode chez nous) : LUNE visible.
-     On applique les transformations qui transforment le SVG soleil en lune
-     (sun scale 1.75 pour qu'il remplisse + mask circle déplacé pour tailler
-     le croissant + beams cachés via opacity 0 et rotation -25°).
-     Convention MIKII : le toggle montre l'ALTERNATIVE (clic pour switcher). */
+  /* Default state (= light mode for us): MOON visible.
+     We apply the transforms that turn the sun SVG into a moon
+     (sun scale 1.75 so it fills + mask circle moved to carve
+     the crescent + beams hidden via opacity 0 and rotation -25°).
+     MIKII convention: the toggle shows the ALTERNATIVE (click to switch). */
   .sun-and-moon > .sun { transform: scale(1.75); }
   .sun-and-moon > .sun-beams {
     opacity: 0;
     transform: rotate(-25deg);
   }
-  /* Mask circle est positionné en cx="17" dans le HTML (= état lune par
-     défaut, le rond noir mord dans le sun-circle pour tailler le croissant).
-     L'animation utilise transform:translateX au lieu de la propriété CSS
-     cx → compatibilité Safari < 15.4 et tous WebKit où @supports(cx:1)
-     pouvait être faux. Sur la lune par défaut : translate 0. */
+  /* Mask circle is positioned at cx="17" in the HTML (= default moon
+     state, the black disc bites into the sun-circle to carve the crescent).
+     The animation uses transform:translateX instead of the CSS property
+     cx → compatibility with Safari < 15.4 and all WebKit where @supports(cx:1)
+     could be false. On the default moon: translate 0. */
   .sun-and-moon .moon > circle { transform: translateX(0); }
 
-  /* La classe .show-sun (sur le BOUTON .toggle, togglée par JS au clic immédiat,
-     SANS attendre la fin du wipe) → SVG revient à son état naturel (soleil + rayons).
-     C'est ce découplage qui rend l'animation du toggle réactive au clic, alors
-     que le wipe + thème swap se fait avec son propre timing de 700ms. */
+  /* The .show-sun class (on the .toggle BUTTON, toggled by JS on the immediate click,
+     WITHOUT waiting for the wipe to finish) → SVG returns to its natural state (sun + beams).
+     This decoupling is what makes the toggle animation responsive to the click, while
+     the wipe + theme swap happens with its own 700ms timing. */
   .toggle.show-sun .sun-and-moon > .sun { transform: scale(1); }
   .toggle.show-sun .sun-and-moon > .sun-beams {
     opacity: 1;
     transform: none;
   }
-  /* Sun mode : on pousse le mask circle hors de la zone du sun → mask
-     devient fully white → sun visible en rond complet. translateX(7px) ≈
-     7 user-units (SVG est rendu ~22-24px ≈ viewBox 24), passe cx 17 → ~24. */
+  /* Sun mode: we push the mask circle out of the sun's zone → mask
+     becomes fully white → sun visible as a full disc. translateX(7px) ≈
+     7 user-units (SVG is rendered ~22-24px ≈ viewBox 24), moves cx 17 → ~24. */
   .toggle.show-sun .sun-and-moon .moon > circle { transform: translateX(7px); }
 
-  /* Transitions ASYMÉTRIQUES façon MIKII :
-     - sens "vers le soleil" (.show-sun appliquée) : élastique long
-       → le soleil arrive en jaillissant
-     - sens "vers la lune" (.show-sun retirée = état par défaut) : court
-       → le soleil s'éclipse vite, la lune apparaît avec un delay */
+  /* ASYMMETRIC transitions, MIKII style:
+     - "toward the sun" direction (.show-sun applied): long elastic
+       → the sun arrives bursting in
+     - "toward the moon" direction (.show-sun removed = default state): short
+       → the sun eclipses fast, the moon appears with a delay */
 
-  /* Base = état par défaut (vers la LUNE) : timing rapide */
+  /* Base = default state (toward the MOON): fast timing */
   .sun-and-moon > .sun {
     transition: transform 0.25s cubic-bezier(0.25, 0, 0.3, 1);
   }
@@ -383,7 +383,7 @@
     transition-delay: 0.25s;
   }
 
-  /* Override quand on bascule vers le SOLEIL (.show-sun) : élastique long */
+  /* Override when switching toward the SUN (.show-sun): long elastic */
   .toggle.show-sun .sun-and-moon > .sun {
     transition: transform 0.5s cubic-bezier(0.5, 1.25, 0.75, 1.25);
   }
@@ -396,12 +396,12 @@
     transition-delay: 0;
   }
 
-  /* ---------- Theme wipe (radial transition entre light/dark) ----------
-     Cercle plein écran centré sur la position du clic, avec backdrop-filter:
-     invert(1) qui inverse les couleurs au fur et à mesure qu'il grandit.
-     À T=700, on swap data-theme atomiquement avec la disparition du wipe.
-     Math : invert(old theme) = new theme look → snap invisible
-     (pas de pop entre inverted-old et actual-new). */
+  /* ---------- Theme wipe (radial transition between light/dark) ----------
+     Full-screen circle centered on the click position, with backdrop-filter:
+     invert(1) that inverts the colors as it grows.
+     At T=700, we swap data-theme atomically with the wipe disappearing.
+     Math: invert(old theme) = new theme look → invisible snap
+     (no pop between inverted-old and actual-new). */
   #theme-wipe {
     position: fixed;
     left: 0;
@@ -421,12 +421,12 @@
   }
 
   /* ---------- Center stage ----------
-     position: absolute + inset: 0 → main.stage couvre tout le viewport
-     (= contenant block .page qui fait 100svh) → place-items: center
-     centre le contenu PILE au milieu du viewport, indépendamment de la
-     hauteur du header ou du footer.
-     pointer-events: none + auto sur .stack → main couvre visuellement
-     header/footer mais ne capture pas leurs clics. */
+     position: absolute + inset: 0 → main.stage covers the whole viewport
+     (= containing block .page which is 100svh) → place-items: center
+     centers the content EXACTLY at the middle of the viewport, regardless of the
+     header or footer height.
+     pointer-events: none + auto on .stack → main visually covers
+     header/footer but does not capture their clicks. */
   main.stage {
     position: absolute;
     inset: 0;
@@ -446,48 +446,48 @@
 
   .logo-center {
     position: relative;
-    z-index: 1; /* < cursor (z:2) → cursor passe AU-DESSUS du logo et inverse ses couleurs via mix-blend-mode */
+    z-index: 1; /* < cursor (z:2) → cursor passes ABOVE the logo and inverts its colors via mix-blend-mode */
     width: 350px;
     max-width: 70vw;
     aspect-ratio: 633.2 / 583.04;
     color: var(--fg);
-    /* Pas d'animation sur le wrapper — chaque polygone du logo s'anime
-       individuellement (cf. règle plus bas) pour un effet "construction". */
+    /* No animation on the wrapper — each polygon of the logo animates
+       individually (see rule below) for a "construction" effect. */
   }
   .logo-center svg {
     width: 100%;
     height: 100%;
     display: block;
-    /* Par défaut, un SVG clipe son contenu sur son viewBox. Pendant l'anim
-       d'entrée, les polygones translatent de ±32px et "sortent du cadre".
-       Sans overflow: visible, ils sont rognés sur les bords. */
+    /* By default, an SVG clips its content to its viewBox. During the
+       entrance anim, the polygons translate by ±32px and "leave the frame".
+       Without overflow: visible, they are clipped at the edges. */
     overflow: visible;
   }
-  /* Fix anti-aliasing : un stroke avec la MÊME couleur que le fill, pour
-     combler les sub-pixels transparents au niveau des arêtes partagées entre
-     polygones adjacents. (currentColor = var(--bg) sur ce SVG, donc on
-     utilise var(--fg) explicite pour matcher le fill.) */
+  /* Anti-aliasing fix: a stroke with the SAME color as the fill, to
+     fill in the transparent sub-pixels at the shared edges between
+     adjacent polygons. (currentColor = var(--bg) on this SVG, so we
+     use explicit var(--fg) to match the fill.) */
   .logo-center .logo-svg polygon {
     stroke: var(--fg);
     stroke-width: 1;
     stroke-linejoin: miter;
   }
-  /* Entrée du logo central : chaque polygone slide-up avec stagger.
-     Le highlight (face arrière) apparaît en premier, puis les 3 faces
-     avant en cascade. Donne un feeling "le logo se construit". */
-  /* Entrée façon construction iso 30° : chaque face entre depuis sa "normale"
-     dans la perspective 3D (top bar tombe d'en haut, lip vient de gauche,
-     tower et middle montent du bas, triangle arrive depuis upper-right). */
+  /* Center logo entrance: each polygon slides up with stagger.
+     The highlight (back face) appears first, then the 3 front faces
+     in cascade. Gives a "the logo builds itself" feeling. */
+  /* Construction-style entrance, iso 30°: each face enters from its "normal"
+     in the 3D perspective (top bar falls from above, lip comes from the left,
+     tower and middle rise from the bottom, triangle arrives from upper-right). */
   .logo-center .logo-svg .face {
     opacity: 0;
     animation-duration: 0.9s;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    animation-fill-mode: both; /* both → from state pendant le delay, to state après */
+    animation-fill-mode: both; /* both → from state during the delay, to state after */
   }
-  /* Cascade : tower et middle en PREMIER (les deux verticales tombent du haut),
-     puis highlight, top, lip s'enchaînent, et enfin le triangle.
-     opacity: 1 → override la base rule (opacity: 0) pour ne PAS avoir de fade :
-     la révélation est uniquement gérée par le clip-path. */
+  /* Cascade: tower and middle FIRST (both verticals fall from the top),
+     then highlight, top, lip follow, and finally the triangle.
+     opacity: 1 → overrides the base rule (opacity: 0) to NOT have a fade:
+     the reveal is handled solely by the clip-path. */
   .logo-center .logo-svg .face-tower {
     animation-name: poly-reveal-from-top;
     animation-delay: 300ms;
@@ -506,12 +506,12 @@
     animation-name: poly-from-bottom-left-iso;     animation-delay: 100ms;
     animation-duration: 1.4s;
   }
-  /* Triangle : opacity 0 au début (cf. base rule) puis flip à 1 à 400ms
-     (= moment où face-middle commence à apparaître). Avant ça, le triangle
-     est à sa position initiale (translate -105, 44) et un petit pixel
-     dépassait au-dessus du highlight ; en le cachant en opacity 0, on
-     élimine le défaut visuel. Le slide démarre ensuite à 600ms.
-     Deux animations parallèles via shorthand : triangle-show (opacity flip)
+  /* Triangle: opacity 0 at the start (see base rule) then flips to 1 at 400ms
+     (= moment when face-middle starts to appear). Before that, the triangle
+     is at its initial position (translate -105, 44) and a small pixel
+     poked out above the highlight; by hiding it at opacity 0, we
+     eliminate the visual defect. The slide then starts at 600ms.
+     Two parallel animations via shorthand: triangle-show (opacity flip)
      + triangle-slide-no-fade (translation). */
   .logo-center .logo-svg .face-triangle {
     animation:
@@ -521,9 +521,9 @@
   @keyframes triangle-show {
     to { opacity: 1; }
   }
-  /* Slide diagonal 22.7° depuis plus loin (~115px de distance totale),
-     SANS fade-in (opacité reste à 1).
-     Math : 115 * cos(22.7°) ≈ 106, 115 * sin(22.7°) ≈ 44.4. */
+  /* Diagonal slide 22.7° from farther away (~115px total distance),
+     WITHOUT fade-in (opacity stays at 1).
+     Math: 115 * cos(22.7°) ≈ 106, 115 * sin(22.7°) ≈ 44.4. */
   @keyframes triangle-slide-no-fade {
     from { transform: translate(-105px, 44px); }
     to   { transform: translate(0, 0); }
@@ -536,16 +536,16 @@
     from { opacity: 0; transform: translateY(-32px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  /* Reveal "iso" inversé : la ligne de coupe suit l'autre direction iso
-     (parallèle au bottom edge des faces verticales, donc DOWN-RIGHT).
-     0% : line à (-16% à gauche, 0% à droite) → au-dessus du polygone, rien visible.
-     100% : line à (84% à gauche, 100% à droite) → au bottom edge, tout visible.
-     Avec fade-in opacity 0 → 1 en parallèle. */
+  /* Inverted "iso" reveal: the cut line follows the other iso direction
+     (parallel to the bottom edge of the vertical faces, so DOWN-RIGHT).
+     0%: line at (-16% left, 0% right) → above the polygon, nothing visible.
+     100%: line at (84% left, 100% right) → at the bottom edge, everything visible.
+     With fade-in opacity 0 → 1 in parallel. */
   @keyframes poly-reveal-from-top {
     0%   { opacity: 0; clip-path: polygon(0% 0%, 100% 0%, 100% 0%, 0% -16%); }
     100% { opacity: 1; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 84%); }
   }
-  /* Depuis le bas, distance modérée (entre poly-from-below 32px et far 150px). */
+  /* From the bottom, moderate distance (between poly-from-below 32px and far 150px). */
   @keyframes poly-from-far-below {
     from { opacity: 0; transform: translateY(60px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -558,20 +558,20 @@
     from { opacity: 0; transform: translateX(-32px); }
     to   { opacity: 1; transform: translateX(0); }
   }
-  /* Diagonal 22.7° (angle isométrique du logo) → bas-gauche
-     Distance totale 32 unités : -32*cos(22.7°), +32*sin(22.7°) ≈ (-29.5, 12.4) */
+  /* Diagonal 22.7° (isometric angle of the logo) → bottom-left
+     Total distance 32 units: -32*cos(22.7°), +32*sin(22.7°) ≈ (-29.5, 12.4) */
   @keyframes poly-from-bottom-left-iso {
     from { opacity: 0; transform: translate(-29.5px, 12.4px); }
     to   { opacity: 1; transform: translate(0, 0); }
   }
-  /* Symétrique : depuis haut-droite à 22.7° → (+29.5, -12.4) */
+  /* Symmetric: from top-right at 22.7° → (+29.5, -12.4) */
   @keyframes poly-from-top-right-iso {
     from { opacity: 0; transform: translate(29.5px, -12.4px); }
     to   { opacity: 1; transform: translate(0, 0); }
   }
-  /* Triangle : départ VISIBLEMENT à gauche du L (-720px hors viewBox côté
-     gauche, mais avec overflow: visible sur le SVG → toujours rendu).
-     Opacité 0→1 en 10% du temps pour qu'il apparaisse "fade-in" au début. */
+  /* Triangle: starts VISIBLY to the left of the L (-720px outside the viewBox
+     on the left, but with overflow: visible on the SVG → still rendered).
+     Opacity 0→1 over 10% of the time so it "fades in" at the start. */
   @keyframes triangle-from-far-left {
     0%   { opacity: 0; transform: translateX(-720px); }
     10%  { opacity: 1; }
@@ -587,14 +587,14 @@
     font-size: 20px;
     font-weight: 500;
     color: var(--fg);
-    /* Pas d'animation sur le wrapper — chaque ligne a son propre fade-in. */
+    /* No animation on the wrapper — each line has its own fade-in. */
   }
-  /* Entrée des lignes du texte : fade-in sobre + léger Y translate.
-     Stagger court (250ms) → la ligne 2 commence avant que la 1 ait fini.
-     pointer-events: none pendant l'animation → tant que le mailto n'est pas
-     visible, il n'intercepte ni les événements (pas de cursor pointer
-     ni de is-hover sur le custom cursor). À 100% de l'animation, la
-     keyframe passe pointer-events à auto et c'est figé par animation-fill-mode: forwards. */
+  /* Text lines entrance: subtle fade-in + slight Y translate.
+     Short stagger (250ms) → line 2 starts before line 1 has finished.
+     pointer-events: none during the animation → as long as the mailto is not
+     visible, it intercepts no events (no cursor pointer
+     nor is-hover on the custom cursor). At 100% of the animation, the
+     keyframe sets pointer-events to auto and it's frozen by animation-fill-mode: forwards. */
   .info > * {
     opacity: 0;
     transform: translateY(6px);
@@ -622,13 +622,13 @@
     width: 100%;
     height: 3px;
     background: currentColor;
-    /* États du clip-path :
-       - default (non-hovered) : inset(0 100% 0 0) → 0-width au LEFT edge (invisible)
-       - .is-hovering           : inset(0 0 0 0)    → full visible
-       - .underline-leaving     : inset(0 0 0 100%) → 0-width au RIGHT edge (invisible)
-       Animation reveal : default → .is-hovering = se révèle depuis la GAUCHE.
-       Animation leave  : .is-hovering → .underline-leaving = disparait vers la DROITE.
-       Au prochain enter, JS reset à default sans transition pour repartir de la GAUCHE. */
+    /* clip-path states:
+       - default (non-hovered) : inset(0 100% 0 0) → 0-width at the LEFT edge (invisible)
+       - .is-hovering           : inset(0 0 0 0)    → fully visible
+       - .underline-leaving     : inset(0 0 0 100%) → 0-width at the RIGHT edge (invisible)
+       Reveal animation: default → .is-hovering = reveals from the LEFT.
+       Leave animation : .is-hovering → .underline-leaving = disappears to the RIGHT.
+       On the next enter, JS resets to default without transition to restart from the LEFT. */
     clip-path: inset(0 100% 0 0);
     transition: clip-path var(--t-med) var(--ease);
   }
@@ -656,17 +656,17 @@
     inset: 0;
     border-radius: 50%;
     border: 1px solid var(--fg);
-    /* transform-origin center : le scale garde le ring centré sur le dot.
-       will-change : pousse la couche sur le compositor GPU dès le start. */
+    /* transform-origin center: the scale keeps the ring centered on the dot.
+       will-change: pushes the layer onto the GPU compositor from the start. */
     transform-origin: center;
     will-change: transform, opacity;
     animation: pulse 2.4s ease-out infinite;
   }
-  /* Animation 100% composite (transform + opacity) → 60fps stable, pas de
-     jank "pixel par pixel". Avant : on animait `inset` (= top/right/bottom/
-     left), qui déclenche layout à chaque frame. Maintenant : scale 1→4
-     reproduit visuellement l'expansion 6px→24px (équivalent inset 0→-9px)
-     SANS toucher au layout. */
+  /* 100% composite animation (transform + opacity) → stable 60fps, no
+     "pixel by pixel" jank. Before: we animated `inset` (= top/right/bottom/
+     left), which triggers layout on every frame. Now: scale 1→4
+     visually reproduces the 6px→24px expansion (equivalent to inset 0→-9px)
+     WITHOUT touching the layout. */
   @keyframes pulse {
     0%   { transform: scale(1); opacity: 0.5; }
     60%  { opacity: 0; }
@@ -685,10 +685,10 @@
 
   /* ---------- Animations ---------- */
   @media (prefers-reduced-motion: reduce) {
-    /* On désactive juste les animations one-shot d'entrée (logo + lettres
-       qui montent depuis le bas) — c'est de l'enrobage, pas critique.
-       Les transitions UI (toggle morph, cursor scale, magnetic, theme wipe)
-       restent actives car subtiles et essentielles à l'expérience. */
+    /* We disable only the one-shot entrance animations (logo + letters
+       rising from the bottom) — that's polish, not critical.
+       The UI transitions (toggle morph, cursor scale, magnetic, theme wipe)
+       stay active since they are subtle and essential to the experience. */
     .logo-center, .info, .info > *,
     .logo-center .logo-svg polygon {
       opacity: 1 !important;
@@ -699,18 +699,18 @@
   }
 
   /* ---------- Responsive ----------
-     Mobile : ratio ~90% pour garder la hiérarchie (header = center,
-     footer un cran en dessous). Desktop & tablette restent au défaut. */
+     Mobile: ~90% ratio to keep the hierarchy (header = center,
+     footer a notch below). Desktop & tablet stay at the default. */
   @media (max-width: 640px) {
     .meta-hide-mobile { display: none; }
     .brand { font-size: 18px; }
     .meta { font-size: 14px; }
     .info { font-size: 18px; margin: 0; }
     .row { gap: 8px; }
-    /* Toggle SVG plus petit sur mobile. flex align-items: center du header
-       maintient l'axe vertical commun avec le brand (Studio + mark). */
+    /* Smaller toggle SVG on mobile. The header's flex align-items: center
+       keeps the common vertical axis with the brand (Studio + mark). */
     .sun-and-moon { width: 18px; height: 18px; }
-    /* "(mais là, je dors)" trop verbeux à côté du status sur mobile. */
+    /* "(mais là, je dors)" too verbose next to the status on mobile. */
     .status-aside { display: none; }
   }
   @media (max-width: 420px) {
@@ -726,17 +726,17 @@
 </style>
 </head>
 <body>
-  <!-- Définitions SVG cachées (mask du logo) -->
+  <!-- Hidden SVG definitions (logo mask) -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
-      <!-- Mask du logo : la forme du highlight (face arrière du L iso) est
-           carved en trou transparent → négatif qui dessine l'arête du L.
+      <!-- Logo mask: the highlight shape (back face of the iso L) is
+           carved into a transparent hole → negative that draws the L's edge.
            White = visible, black = invisible.
-           Mask region étendue à -500 / +1633 (= viewBox + ~500 unités de
-           padding chaque côté) : les polygons qui translatent loin pendant
-           l'anim d'entrée (triangle à -105px, lip à -29.5px, etc.) restent
-           DANS la mask region → visibles. Sans cette extension, ils
-           étaient masqués out car hors de la zone définie du mask. -->
+           Mask region extended to -500 / +1633 (= viewBox + ~500 units of
+           padding each side): the polygons that translate far during
+           the entrance anim (triangle at -105px, lip at -29.5px, etc.) stay
+           INSIDE the mask region → visible. Without this extension, they
+           were masked out because they fell outside the mask's defined area. -->
       <mask id="logo-mask" maskUnits="userSpaceOnUse" x="-500" y="-500" width="1633.2" height="1583.04">
         <rect x="-500" y="-500" width="1633.2" height="1583.04" fill="white"/>
         <polygon points="527.65 315.29 527.71 44.09 105.62 220.38 105.65 356 211.14 311.98 211.14 583.04 316.6 539 316.64 267.96 422.14 223.93 422.14 494.92 633.19 403.1 633.2 271.21 527.65 315.29" fill="black"/>
@@ -744,12 +744,12 @@
     </defs>
   </svg>
 
-  <!-- Curseur custom : petit point blanc avec mix-blend-mode: difference
-       pour s'inverser sur les éléments du site. -->
+  <!-- Custom cursor: small white dot with mix-blend-mode: difference
+       to invert over the site's elements. -->
   <div class="cursor" aria-hidden="true"></div>
 
-  <!-- Theme wipe : cercle qui scale plein écran avec backdrop-filter: invert(1)
-       pour transitionner entre light et dark mode. Origine = position du clic. -->
+  <!-- Theme wipe: circle that scales full screen with backdrop-filter: invert(1)
+       to transition between light and dark mode. Origin = click position. -->
   <span id="theme-wipe" aria-hidden="true"></span>
 
   <div class="page">
@@ -760,14 +760,14 @@
         <span>Studio</span>
         <span class="mark" aria-hidden="true">
           <svg class="logo-svg" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <!-- Faces du L groupées sous le mask : la zone du highlight (face
-                 arrière iso) est carved en trou transparent → négatif de l'arête. -->
+            <!-- L faces grouped under the mask: the highlight area (iso
+                 back face) is carved into a transparent hole → negative of the edge. -->
             <g mask="url(#logo-mask)">
-              <!-- Chaque polygon wrappé dans un <g class="face face-X"> :
-                   les CSS transforms sur <g> sont en CSS pixels sur tous
-                   les browsers. Sur <polygon> direct, Safari les
-                   interprète en user units du viewBox local → translates
-                   ridicules, anim d'entrée invisible côté Safari. -->
+              <!-- Each polygon wrapped in a <g class="face face-X">:
+                   CSS transforms on <g> are in CSS pixels on all
+                   browsers. On a direct <polygon>, Safari
+                   interprets them in user units of the local viewBox → ridiculous
+                   translates, entrance anim invisible on Safari. -->
               <g class="face face-triangle"><polygon points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/></g>
               <g class="face face-top"><polygon points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/></g>
               <g class="face face-lip"><polygon points="105.65 356 0 311.87 0 176.33 105.62 220.38"/></g>
@@ -865,16 +865,16 @@
       if (persist) {
         localStorage.setItem('studiotl-theme', mode);
       }
-      // On set TOUJOURS data-theme, peu importe l'origine (système ou manuel).
-      // L'inline script du <head> a déjà fait ça avant le paint. Cette fonction
-      // est appelée ici pour ré-aligner aria + .show-sun après les premières
-      // interactions ou changements de préférence système.
+      // We ALWAYS set data-theme, regardless of the origin (system or manual).
+      // The <head> inline script already did this before the paint. This function
+      // is called here to re-align aria + .show-sun after the first
+      // interactions or system preference changes.
       root.setAttribute('data-theme', mode);
       root.classList.toggle('is-dark', mode === 'dark');
       btn.setAttribute('aria-checked', mode === 'dark' ? 'true' : 'false');
-      // L'icône du toggle reflète l'ALTERNATIVE (cf. convention MIKII) :
-      //  - dark mode → on montre le SOLEIL → .show-sun ON
-      //  - light mode → on montre la LUNE → .show-sun OFF
+      // The toggle icon reflects the ALTERNATIVE (see MIKII convention):
+      //  - dark mode → we show the SUN → .show-sun ON
+      //  - light mode → we show the MOON → .show-sun OFF
       btn.classList.toggle('show-sun', mode === 'dark');
     }
 
@@ -888,28 +888,28 @@
       var target = effective() === 'dark' ? 'light' : 'dark';
       var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      // Icône : on toggle .show-sun immédiatement (ne pas attendre le wipe).
+      // Icon: we toggle .show-sun immediately (don't wait for the wipe).
       btn.classList.toggle('show-sun', target === 'dark');
 
-      // Pas de wipe si reduce-motion ou élément absent
+      // No wipe if reduce-motion or element absent
       if (!wipe || reduced) {
         apply(target, true);
         return;
       }
 
-      // Origine = position du clic (fallback : centre du bouton)
+      // Origin = click position (fallback: center of the button)
       var rect = btn.getBoundingClientRect();
       var x = e.clientX || (rect.left + rect.width / 2);
       var y = e.clientY || (rect.top + rect.height / 2);
       wipe.style.left = x + 'px';
       wipe.style.top  = y + 'px';
-      void wipe.offsetWidth; // force reflow pour que la transition parte de scale 0
+      void wipe.offsetWidth; // force reflow so the transition starts from scale 0
       wipe.classList.add('is-wiping');
 
       setTimeout(function () {
-        // Snap thème + cleanup wipe atomiques en fin de wipe.
-        // invert(old theme) = actual new theme exactly → pas de pop entre la
-        // vue inversée pendant le wipe et la vue réelle après le snap.
+        // Atomic theme snap + wipe cleanup at the end of the wipe.
+        // invert(old theme) = actual new theme exactly → no pop between the
+        // inverted view during the wipe and the real view after the snap.
         document.body.style.transition = 'none';
         apply(target, true);
         wipe.style.transition = 'none';
@@ -925,13 +925,13 @@
     });
   })();
 
-  /* ---------- Lyon local clock + status nocturne ----------
-     Format de l'heure dépend de <html lang> :
-       - fr → 24h, ex: "14:30 Lyon"
-       - en → 12h avec AM/PM, ex: "2:30 PM Lyon"
-     La logique "sleeping" reste en 24h interne quel que soit le format
-     d'affichage. Le texte du status nocturne (' (mais là, je dors)') est
-     remplacé pour la version EN par le build i18n. */
+  /* ---------- Lyon local clock + nighttime status ----------
+     Time format depends on <html lang>:
+       - fr → 24h, e.g. "14:30 Lyon"
+       - en → 12h with AM/PM, e.g. "2:30 PM Lyon"
+     The "sleeping" logic stays internally in 24h regardless of the display
+     format. The nighttime status text (' (mais là, je dors)') is
+     replaced for the EN version by the i18n build. */
   (function () {
     var el = document.getElementById('clock');
     var aside = document.getElementById('statusAside');
@@ -941,9 +941,9 @@
       var d = new Date();
       var lyonH = 0, lyonM = 0;
       try {
-        // Toujours fr-FR + hour12:false ici → on récupère l'heure de Lyon
-        // en format 24h, peu importe la langue d'affichage. La conversion
-        // 12h se fait après pour EN.
+        // Always fr-FR + hour12:false here → we get the Lyon time
+        // in 24h format, regardless of the display language. The 12h
+        // conversion is done afterward for EN.
         var parts = new Intl.DateTimeFormat('fr-FR', {
           timeZone: 'Europe/Paris',
           hour: '2-digit', minute: '2-digit', hour12: false
@@ -957,15 +957,15 @@
       var mm = String(lyonM).padStart(2, '0');
       var hh, ampm = '';
       if (lang === 'en') {
-        // 12h : "12:40 PM", "1:05 AM" (pas de leading zero sur les heures
-        // en convention US, contrairement aux minutes qui restent paddées).
+        // 12h: "12:40 PM", "1:05 AM" (no leading zero on the hours
+        // in US convention, unlike the minutes which stay padded).
         hh = String(lyonH % 12 || 12);
         ampm = ' ' + (lyonH >= 12 ? 'PM' : 'AM');
       } else {
         hh = String(lyonH).padStart(2, '0');
       }
-      // innerHTML pour wrapper le `:` dans un span animable. hh/mm/ampm
-      // viennent de Intl/Date donc safe (pas d'injection).
+      // innerHTML to wrap the `:` in an animatable span. hh/mm/ampm
+      // come from Intl/Date so safe (no injection).
       el.textContent = hh + ':' + mm + ampm + ' Lyon';
       if (aside) {
         var total = lyonH * 60 + lyonM;
@@ -977,18 +977,18 @@
     setInterval(tick, 15000);
   })();
 
-  /* ---------- Curseur custom : tracking souris avec lerp ----------
-     Inspiration MIKII (qui utilisait TweenMax + Back.easeOut sur 400ms).
-     On reproduit le même feeling en pur JS avec un lerp à 0.14 par frame :
-     ça donne ~25 frames pour rejoindre la cible = ~400ms à 60fps.
-     Pas d'overshoot du Back.ease, mais à l'usage continu c'est invisible. */
+  /* ---------- Custom cursor: mouse tracking with lerp ----------
+     MIKII inspiration (which used TweenMax + Back.easeOut over 400ms).
+     We reproduce the same feeling in pure JS with a lerp of 0.14 per frame:
+     that gives ~25 frames to reach the target = ~400ms at 60fps.
+     No overshoot from Back.ease, but in continuous use it's invisible. */
   (function () {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     var cursor = document.querySelector('.cursor');
     if (!cursor) return;
-    // Le centrage du cursor sur la souris est géré par le CSS via
-    // `transform: translate(-50%, -50%)` (auto-scale avec la taille du cursor).
-    // Le JS positionne juste le coin via `translate` (individual property).
+    // The centering of the cursor on the mouse is handled by CSS via
+    // `transform: translate(-50%, -50%)` (auto-scale with the cursor size).
+    // The JS just positions the corner via `translate` (individual property).
     var x = 0, y = 0, tx = 0, ty = 0, raf = null, init = false;
     function frame() {
       raf = null;
@@ -1014,15 +1014,15 @@
     window.addEventListener('mouseenter', function () { cursor.style.opacity = '1'; });
   })();
 
-  /* ---------- Mailto underline : reveal LEFT, leave RIGHT ----------
-     Comportement :
-      - mouseenter : si on était en train de "leaver" (clip à droite), on
-        reset SANS transition à l'état default (clip à gauche), puis on
-        applique .is-hovering → le reveal repart toujours DE LA GAUCHE.
-      - mouseleave : on retire .is-hovering et on ajoute .underline-leaving
-        → l'underline sort vers la DROITE.
-     Le double rAF + .no-transition évite tout retour visible quand on
-     "rewind" le clip de droite vers gauche avant le prochain reveal. */
+  /* ---------- Mailto underline: reveal LEFT, leave RIGHT ----------
+     Behavior:
+      - mouseenter: if we were "leaving" (clip on the right), we
+        reset WITHOUT transition to the default state (clip on the left), then we
+        apply .is-hovering → the reveal always restarts FROM THE LEFT.
+      - mouseleave: we remove .is-hovering and add .underline-leaving
+        → the underline exits to the RIGHT.
+     The double rAF + .no-transition avoids any visible rewind when we
+     "rewind" the clip from right to left before the next reveal. */
   (function () {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     var link = document.querySelector('.contact');
@@ -1031,8 +1031,8 @@
       if (link.classList.contains('underline-leaving')) {
         link.classList.add('no-transition');
         link.classList.remove('underline-leaving');
-        // Force reflow → l'état "default" (clip à gauche) est appliqué
-        // sans transition avant qu'on retire .no-transition.
+        // Force reflow → the "default" state (clip on the left) is applied
+        // without transition before we remove .no-transition.
         void link.offsetWidth;
         link.classList.remove('no-transition');
       }
@@ -1045,10 +1045,10 @@
   })();
 
   /* ---------- Magnetic + cursor scale on hover ----------
-     Helper appliqué à plusieurs cibles (mailto + toggle dark mode).
-     Chaque cible : pull magnétique + .is-hover sur le cursor.
-     - Mailto : transform: translate3d (rien d'autre côté CSS)
-     - Toggle : style.translate seul (le scale au hover est en CSS, pour composer) */
+     Helper applied to several targets (mailto + dark mode toggle).
+     Each target: magnetic pull + .is-hover on the cursor.
+     - Mailto: transform: translate3d (nothing else on the CSS side)
+     - Toggle: style.translate alone (the hover scale is in CSS, to compose) */
   (function () {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     var cursor = document.querySelector('.cursor');
@@ -1101,9 +1101,9 @@
     }
 
     magnetize(document.querySelector('.contact'), { divisor: 6 });
-    // Toggle : pull magnétique + cursor élargi (is-hover-lg, 45px) pour
-    // accentuer la zone. useIndividualTransform → on touche style.translate
-    // (pas .transform) pour ne pas écraser le scale: 1.1 du :hover en CSS.
+    // Toggle: magnetic pull + widened cursor (is-hover-lg, 45px) to
+    // accentuate the zone. useIndividualTransform → we touch style.translate
+    // (not .transform) so as not to overwrite the scale: 1.1 of the :hover in CSS.
     magnetize(document.getElementById('themeToggle'), {
       divisor: 4,
       useIndividualTransform: true,

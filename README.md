@@ -1,58 +1,58 @@
-# Studio TL — Site
+# Studio TL — Website
 
-Site personnel statique (HTML/CSS/JS).
+Personal static website (HTML/CSS/JS).
 
-- 🌐 **Production** : [www.studiotl.fr](https://www.studiotl.fr)
-- 🏠 **Hébergement** : Infomaniak
-- 🚀 **Déploiement** : automatique via GitHub Actions (FTPS) à chaque push sur `main`
+- 🌐 **Production**: [www.studiotl.fr](https://www.studiotl.fr)
+- 🏠 **Hosting**: Infomaniak
+- 🚀 **Deployment**: automatic via GitHub Actions (FTPS) on every push to `main`
 
 ## Structure
 
 ```
 .
-├── index.html              # Page unique (CSS + JS inline)
+├── index.html              # Single page (inline CSS + JS)
 ├── assets/
 │   ├── logo.svg
 │   └── fonts/              # Neue Montreal (4 woff2)
 └── .github/workflows/
-    └── deploy.yml          # Déploiement auto FTPS vers Infomaniak
+    └── deploy.yml          # Automatic FTPS deploy to Infomaniak
 ```
 
-## Développement local
+## Local development
 
-Installer les dépendances :
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-Générer la version de production locale :
+Generate the local production build:
 
 ```bash
 npm run deploy:prepare
 ```
 
-Soit ouvrir `index.html` directement dans un navigateur pour travailler sur la source, soit lancer un petit serveur depuis `dist/` après build :
+Either open `index.html` directly in a browser to work on the source, or run a small server from `dist/` after building:
 
 ```bash
 cd dist
 python3 -m http.server 8000
-# puis http://localhost:8000
+# then http://localhost:8000
 ```
 
-## Déploiement
+## Deployment
 
-Tout `git push` sur la branche `main` déclenche un déploiement automatique vers Infomaniak via FTPS (GitHub Actions).
+Every `git push` to the `main` branch triggers an automatic deploy to Infomaniak over FTPS (GitHub Actions).
 
-Pour forcer un déploiement manuel : onglet **Actions** sur GitHub → workflow **Deploy to Infomaniak** → **Run workflow**.
+To force a manual deploy: **Actions** tab on GitHub → **Deploy to Infomaniak** workflow → **Run workflow**.
 
-### Secrets GitHub requis
+### Required GitHub secrets
 
-À configurer une seule fois dans **Settings → Secrets and variables → Actions** :
+Configure once under **Settings → Secrets and variables → Actions**:
 
-| Secret           | Exemple                       |
+| Secret           | Example                       |
 | ---------------- | ----------------------------- |
 | `FTP_SERVER`     | `ftp.infomaniak.com`          |
-| `FTP_USERNAME`   | identifiant FTP Infomaniak    |
-| `FTP_PASSWORD`   | mot de passe FTP              |
-| `FTP_REMOTE_DIR` | `/sites/tondomaine.com/` ou `/` selon ta config |
+| `FTP_USERNAME`   | Infomaniak FTP username       |
+| `FTP_PASSWORD`   | FTP password                  |
+| `FTP_REMOTE_DIR` | `/sites/yourdomain.com/` or `/` depending on your config |

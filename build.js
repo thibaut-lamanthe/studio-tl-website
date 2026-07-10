@@ -1,20 +1,20 @@
 /**
- * Build i18n : génère dist/index.html (FR) et dist/en/index.html (EN) à
- * partir d'un seul fichier source (index.html en français) + i18n.json.
+ * i18n build: generates dist/index.html (FR) and dist/en/index.html (EN) from
+ * a single source file (index.html in French) + i18n.json.
  *
- * Workflow utilisateur :
- *   1. Modifier index.html (en français)
- *   2. Si on touche un texte traduisible, mettre à jour i18n.json (FR→EN)
- *   3. Push → GitHub Action lance ce script puis FTP deploy
+ * User workflow:
+ *   1. Edit index.html (in French)
+ *   2. If a translatable string is touched, update i18n.json (FR→EN)
+ *   3. Push → GitHub Action runs this script then the FTP deploy
  *
- * Output dans dist/ :
- *   - index.html       version FR (path assets/ relatifs, OK depuis /)
- *   - en/index.html    version EN (path assets/ absolutisés en /assets/)
- *   - .htaccess        redirige les visiteurs en* vers /en/ (sauf bots)
- *   - assets/          copie de assets/ pour servir les fonts + svgs
+ * Output in dist/:
+ *   - index.html       FR version (relative assets/ paths, OK from /)
+ *   - en/index.html    EN version (assets/ paths absolutized to /assets/)
+ *   - .htaccess        redirects en* visitors to /en/ (except bots)
+ *   - assets/          copy of assets/ to serve the fonts + svgs
  *
- * Les deux HTML reçoivent les <link rel="alternate" hreflang> + canonical
- * pour que Google indexe les deux URLs séparément avec leur public cible.
+ * Both HTML files receive the <link rel="alternate" hreflang> + canonical
+ * tags so Google indexes both URLs separately for their target audience.
  */
 
 const fs = require('fs');
@@ -28,8 +28,8 @@ const DIST = 'dist';
 const source = fs.readFileSync(SOURCE, 'utf8');
 const i18n = JSON.parse(fs.readFileSync(I18N, 'utf8'));
 
-// Tags hreflang + canonical injectés dans le <head> de chaque version.
-// {{CANONICAL}} → '' pour FR (= /), 'en/' pour EN (= /en/)
+// hreflang + canonical tags injected into the <head> of each version.
+// {{CANONICAL}} → '' for FR (= /), 'en/' for EN (= /en/)
 function buildHeadTags(canonicalPath) {
   return [
     '<link rel="canonical" href="' + SITE_URL + '/' + canonicalPath + '" />',
@@ -43,11 +43,11 @@ function injectHead(html, canonicalPath) {
   return html.replace('</head>', '  ' + buildHeadTags(canonicalPath) + '\n</head>');
 }
 
-// === FR : copie quasi à l'identique, juste hreflang + canonical ===
+// === FR: near-identical copy, just hreflang + canonical ===
 const frVersion = injectHead(source, '');
 
-// === EN : remplace les strings FR→EN, swap lang attr, absolutise les
-//         path assets/ (sinon depuis /en/ ils résolvent en /en/assets/) ===
+// === EN: swap FR→EN strings, swap lang attr, absolutize the
+//         assets/ paths (otherwise from /en/ they resolve to /en/assets/) ===
 let enVersion = source.replace('<html lang="fr">', '<html lang="en">');
 for (const [fr, en] of Object.entries(i18n)) {
   if (!enVersion.includes(fr)) {
@@ -55,11 +55,11 @@ for (const [fr, en] of Object.entries(i18n)) {
   }
   enVersion = enVersion.split(fr).join(en);
 }
-// Asset paths : relative (assets/) → absolute (/assets/) pour /en/
+// Asset paths: relative (assets/) → absolute (/assets/) for /en/
 enVersion = enVersion.replace(/href="assets\//g, 'href="/assets/');
 enVersion = enVersion.replace(/src="assets\//g, 'src="/assets/');
 enVersion = enVersion.replace(/url\("assets\//g, 'url("/assets/');
-// OG meta : url + locale spécifiques à la version EN
+// OG meta: url + locale specific to the EN version
 enVersion = enVersion.replace(
   '<meta property="og:url" content="' + SITE_URL + '/" />',
   '<meta property="og:url" content="' + SITE_URL + '/en/" />'
@@ -74,48 +74,48 @@ enVersion = enVersion.replace(
 );
 enVersion = injectHead(enVersion, 'en/');
 
-// === .htaccess : auto-redirect basé sur Accept-Language ===
-// Logique :
-//   - Si User-Agent est un bot → pas de redirect (ils crawlent les URLs
-//     explicitement, hreflang les guide)
-//   - Si déjà sous /en/ → pas de redirect
-//   - Si requête pour un asset → pas de redirect
-//   - Si Accept-Language commence par "en" (en-US, en-GB, etc.) → 302 vers /en/
-//   - Sinon → reste sur /
+// === .htaccess: auto-redirect based on Accept-Language ===
+// Logic:
+//   - If User-Agent is a bot → no redirect (they crawl URLs
+//     explicitly, hreflang guides them)
+//   - If already under /en/ → no redirect
+//   - If the request is for an asset → no redirect
+//   - If Accept-Language starts with "en" (en-US, en-GB, etc.) → 302 to /en/
+//   - Otherwise → stays on /
 const htaccess = [
   'RewriteEngine On',
   '',
-  '# Canonicalisation : tout host ≠ www.studiotl.fr → 301 vers le host canonique.',
-  '# Couvre studiotl.fr (apex), studio-tl.fr, thibautlamanthe.com, thibautlamanthe.fr',
-  '# et leurs variantes www. Le path est conservé via $1.',
+  '# Canonicalization: any host != www.studiotl.fr → 301 to the canonical host.',
+  '# Covers studiotl.fr (apex), studio-tl.fr, thibautlamanthe.com, thibautlamanthe.fr',
+  '# and their www variants. The path is preserved via $1.',
   'RewriteCond %{HTTP_HOST} !^www\\.studiotl\\.fr$ [NC]',
   'RewriteRule ^(.*)$ https://www.studiotl.fr/$1 [R=301,L]',
   '',
-  '# Skip bots : ils crawlent les URLs explicitement, hreflang les guide',
+  '# Skip bots: they crawl URLs explicitly, hreflang guides them',
   'RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|yandex|baiduspider|duckduckbot|slurp|applebot|facebot) [NC]',
   'RewriteRule .* - [L]',
   '',
-  '# Skip si déjà sous /en/',
+  '# Skip if already under /en/',
   'RewriteCond %{REQUEST_URI} ^/en($|/)',
   'RewriteRule .* - [L]',
   '',
-  '# Skip pour les assets (fonts, svgs, etc.)',
+  '# Skip for assets (fonts, svgs, etc.)',
   'RewriteCond %{REQUEST_URI} ^/assets/',
   'RewriteRule .* - [L]',
   '',
-  '# Ne traite que la racine (/ ou /index.html)',
+  '# Only handle the root (/ or /index.html)',
   'RewriteCond %{REQUEST_URI} !^/$',
   'RewriteCond %{REQUEST_URI} !^/index\\.html$',
   'RewriteRule .* - [L]',
   '',
-  '# Redirect EN speakers vers /en/',
+  '# Redirect EN speakers to /en/',
   'RewriteCond %{HTTP:Accept-Language} ^en [NC]',
   'RewriteRule ^ /en/ [R=302,L]',
   ''
 ].join('\n');
 
 // === robots.txt ===
-// Autorise tout, pointe vers le sitemap.
+// Allows everything, points to the sitemap.
 const robots = [
   'User-agent: *',
   'Allow: /',
@@ -125,7 +125,7 @@ const robots = [
 ].join('\n');
 
 // === sitemap.xml ===
-// Une entrée par version linguistique avec xhtml:link hreflang croisés.
+// One entry per language version with cross-linked xhtml:link hreflang.
 const today = new Date().toISOString().slice(0, 10);
 const sitemap = [
   '<?xml version="1.0" encoding="UTF-8"?>',
@@ -158,7 +158,7 @@ fs.writeFileSync(path.join(DIST, '.htaccess'), htaccess);
 fs.writeFileSync(path.join(DIST, 'robots.txt'), robots);
 fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sitemap);
 
-// Copie récursive de assets/ → dist/assets/
+// Recursive copy of assets/ → dist/assets/
 function copyDir(src, dest) {
   if (!fs.existsSync(src)) return;
   fs.mkdirSync(dest, { recursive: true });
@@ -172,10 +172,10 @@ function copyDir(src, dest) {
 }
 copyDir('assets', path.join(DIST, 'assets'));
 
-console.log('Build OK :');
+console.log('Build OK:');
 console.log('  - ' + path.join(DIST, 'index.html') + ' (FR)');
 console.log('  - ' + path.join(DIST, 'en', 'index.html') + ' (EN)');
 console.log('  - ' + path.join(DIST, '.htaccess'));
 console.log('  - ' + path.join(DIST, 'robots.txt'));
 console.log('  - ' + path.join(DIST, 'sitemap.xml'));
-console.log('  - ' + path.join(DIST, 'assets/') + ' (copié)');
+console.log('  - ' + path.join(DIST, 'assets/') + ' (copied)');
