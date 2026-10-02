@@ -19,7 +19,8 @@ const contentChecks = [
     file: path.join('dist', 'index.html'),
     checks: [
       '<html lang="fr">',
-      '<h1 class="info">',
+      '<div class="info">',
+      '<h1>',
       '<link rel="canonical" href="https://www.studiotl.fr/"',
       'hreflang="fr"',
       'hreflang="en"',
@@ -30,12 +31,17 @@ const contentChecks = [
     file: path.join('dist', 'en', 'index.html'),
     checks: [
       '<html lang="en">',
-      '<h1 class="info">',
+      '<div class="info">',
+      '<h1>',
       '<link rel="canonical" href="https://www.studiotl.fr/en/"',
       'hreflang="fr"',
       'hreflang="en"',
       'Handcrafted digital'
     ]
+  },
+  {
+    file: path.join('dist', '.htaccess'),
+    checks: ['RewriteCond %{HTTPS} off']
   },
   {
     file: path.join('dist', 'robots.txt'),

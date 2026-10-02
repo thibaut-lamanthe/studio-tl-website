@@ -142,13 +142,9 @@
   :root {
     --bg: #ffffff;
     --fg: #000000;
-    --muted: var(--fg);
-    --hairline: var(--fg);
-    --accent: var(--fg);
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
     --t-fast: 180ms;
     --t-med: 420ms;
-    --t-slow: 800ms;
 
     --pad-x: clamp(20px, 4vw, 48px);
     --pad-y: clamp(20px, 3.2vw, 36px);
@@ -243,14 +239,6 @@
   /* On tablet / phone: no custom cursor */
   @media (hover: none), (pointer: coarse) {
     .cursor { display: none; }
-  }
-
-  /* ---------- Center logo ----------
-     The L body is rendered in var(--fg) via direct fill on the polygons
-     (overrides the currentColor inheritance) → the color lerps on theme
-     toggle via the CSS transition. */
-  .logo-center .logo-svg polygon {
-    fill: var(--fg);
   }
 
   header.bar, footer.bar {
@@ -393,7 +381,7 @@
   }
   .toggle.show-sun .sun-and-moon .moon > circle {
     transition: transform 0.25s cubic-bezier(0, 0, 0, 1);
-    transition-delay: 0;
+    transition-delay: 0s;
   }
 
   /* ---------- Theme wipe (radial transition between light/dark) ----------
@@ -441,7 +429,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(24px, 4.5vh, 25px);
+    gap: 25px;
   }
 
   .logo-center {
@@ -463,11 +451,14 @@
        Without overflow: visible, they are clipped at the edges. */
     overflow: visible;
   }
-  /* Anti-aliasing fix: a stroke with the SAME color as the fill, to
+  /* The L body is rendered in var(--fg) via direct fill on the polygons
+     (overrides the currentColor inheritance) → the color lerps on theme
+     toggle via the CSS transition.
+     Anti-aliasing fix: a stroke with the SAME color as the fill, to
      fill in the transparent sub-pixels at the shared edges between
-     adjacent polygons. (currentColor = var(--bg) on this SVG, so we
-     use explicit var(--fg) to match the fill.) */
+     adjacent polygons. */
   .logo-center .logo-svg polygon {
+    fill: var(--fg);
     stroke: var(--fg);
     stroke-width: 1;
     stroke-linejoin: miter;
@@ -528,14 +519,6 @@
     from { transform: translate(-105px, 44px); }
     to   { transform: translate(0, 0); }
   }
-  @keyframes poly-fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-  @keyframes poly-from-above {
-    from { opacity: 0; transform: translateY(-32px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
   /* Inverted "iso" reveal: the cut line follows the other iso direction
      (parallel to the bottom edge of the vertical faces, so DOWN-RIGHT).
      0%: line at (-16% left, 0% right) → above the polygon, nothing visible.
@@ -544,19 +527,6 @@
   @keyframes poly-reveal-from-top {
     0%   { opacity: 0; clip-path: polygon(0% 0%, 100% 0%, 100% 0%, 0% -16%); }
     100% { opacity: 1; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 84%); }
-  }
-  /* From the bottom, moderate distance (between poly-from-below 32px and far 150px). */
-  @keyframes poly-from-far-below {
-    from { opacity: 0; transform: translateY(60px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes poly-from-below {
-    from { opacity: 0; transform: translateY(32px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes poly-from-left {
-    from { opacity: 0; transform: translateX(-32px); }
-    to   { opacity: 1; transform: translateX(0); }
   }
   /* Diagonal 22.7° (isometric angle of the logo) → bottom-left
      Total distance 32 units: -32*cos(22.7°), +32*sin(22.7°) ≈ (-29.5, 12.4) */
@@ -569,14 +539,6 @@
     from { opacity: 0; transform: translate(29.5px, -12.4px); }
     to   { opacity: 1; transform: translate(0, 0); }
   }
-  /* Triangle: starts VISIBLY to the left of the L (-720px outside the viewBox
-     on the left, but with overflow: visible on the SVG → still rendered).
-     Opacity 0→1 over 10% of the time so it "fades in" at the start. */
-  @keyframes triangle-from-far-left {
-    0%   { opacity: 0; transform: translateX(-720px); }
-    10%  { opacity: 1; }
-    100% { opacity: 1; transform: translateX(0); }
-  }
 
   .info {
     display: inline-flex;
@@ -588,6 +550,12 @@
     font-weight: 500;
     color: var(--fg);
     /* No animation on the wrapper — each line has its own fade-in. */
+  }
+  /* The tagline is the page's <h1>: drop the UA heading styles so it
+     inherits the .info typography. */
+  .info h1 {
+    margin: 0;
+    font: inherit;
   }
   /* Text lines entrance: subtle fade-in + slight Y translate.
      Short stagger (250ms) → line 2 starts before line 1 has finished.
@@ -687,8 +655,9 @@
   @media (prefers-reduced-motion: reduce) {
     /* We disable only the one-shot entrance animations (logo + letters
        rising from the bottom) — that's polish, not critical.
-       The UI transitions (toggle morph, cursor scale, magnetic, theme wipe)
-       stay active since they are subtle and essential to the experience. */
+       The UI transitions (toggle morph, cursor scale, magnetic) stay active
+       since they are subtle and essential to the experience. The theme wipe
+       is skipped in JS (see the theme toggle click handler). */
     .logo-center, .info, .info > *,
     .logo-center .logo-svg polygon {
       opacity: 1 !important;
@@ -822,10 +791,10 @@
           </svg>
         </div>
 
-        <h1 class="info">
-          <span>Digital sur&#8209;mesure&nbsp;&#8211;&nbsp;Lyon, France</span>
+        <div class="info">
+          <h1>Digital sur&#8209;mesure&nbsp;&#8211;&nbsp;Lyon, France</h1>
           <a class="contact" href="mailto:hello@studiotl.fr">hello@studiotl.fr</a>
-        </h1>
+        </div>
       </div>
     </main>
 
@@ -837,11 +806,11 @@
           <span>Disponible pour vos projets<span class="status-aside" id="statusAside" aria-hidden="true"></span></span>
         </span>
         <span class="meta-hide-mobile" aria-hidden="true">–</span>
-        <span class="clock meta-hide-mobile" id="clock" aria-label="Heure locale à Lyon">—</span>
+        <span class="clock meta-hide-mobile" id="clock">—</span>
       </div>
 
       <div class="row right meta">
-        <span>© 2026</span>
+        <span>© <span id="year">2026</span></span>
         <span class="meta-hide-mobile" aria-hidden="true">–</span>
         <span class="meta-hide-mobile">Tous droits réservés</span>
       </div>
@@ -855,15 +824,28 @@
     var root = document.documentElement;
     var btn  = document.getElementById('themeToggle');
     var mq   = window.matchMedia('(prefers-color-scheme: dark)');
+    var themeColorMetas = document.querySelectorAll('meta[name="theme-color"]');
 
+    // localStorage can throw (blocked storage, some private modes) →
+    // fall back to the system preference without persisting.
+    function readStored() {
+      try { return localStorage.getItem('studiotl-theme'); } catch (e) { return null; }
+    }
     function effective() {
-      var stored = localStorage.getItem('studiotl-theme');
+      var stored = readStored();
       if (stored === 'dark' || stored === 'light') return stored;
       return mq.matches ? 'dark' : 'light';
     }
     function apply(mode, persist) {
       if (persist) {
-        localStorage.setItem('studiotl-theme', mode);
+        try { localStorage.setItem('studiotl-theme', mode); } catch (e) {}
+      }
+      // Browser UI color (Safari / mobile address bar): the <meta> tags only
+      // follow the system preference, so we overwrite both with the active
+      // theme → whichever media query matches, the color is right.
+      var barColor = mode === 'dark' ? '#000000' : '#ffffff';
+      for (var i = 0; i < themeColorMetas.length; i++) {
+        themeColorMetas[i].setAttribute('content', barColor);
       }
       // We ALWAYS set data-theme, regardless of the origin (system or manual).
       // The <head> inline script already did this before the paint. This function
@@ -921,7 +903,7 @@
     });
 
     mq.addEventListener && mq.addEventListener('change', function () {
-      if (!localStorage.getItem('studiotl-theme')) apply(effective(), false);
+      if (!readStored()) apply(effective(), false);
     });
   })();
 
@@ -964,8 +946,6 @@
       } else {
         hh = String(lyonH).padStart(2, '0');
       }
-      // innerHTML to wrap the `:` in an animatable span. hh/mm/ampm
-      // come from Intl/Date so safe (no injection).
       el.textContent = hh + ':' + mm + ampm + ' Lyon';
       if (aside) {
         var total = lyonH * 60 + lyonM;
@@ -975,6 +955,13 @@
     }
     tick();
     setInterval(tick, 15000);
+  })();
+
+  /* ---------- Copyright year ----------
+     The HTML holds a static fallback; JS keeps it current without a redeploy. */
+  (function () {
+    var el = document.getElementById('year');
+    if (el) el.textContent = String(new Date().getFullYear());
   })();
 
   /* ---------- Custom cursor: mouse tracking with lerp ----------

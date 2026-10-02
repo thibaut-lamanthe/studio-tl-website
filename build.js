@@ -76,6 +76,7 @@ enVersion = injectHead(enVersion, 'en/');
 
 // === .htaccess: auto-redirect based on Accept-Language ===
 // Logic:
+//   - Non-canonical host or plain HTTP → 301 to https://www.studiotl.fr
 //   - If User-Agent is a bot → no redirect (they crawl URLs
 //     explicitly, hreflang guides them)
 //   - If already under /en/ → no redirect
@@ -89,6 +90,12 @@ const htaccess = [
   '# Covers studiotl.fr (apex), studio-tl.fr, thibautlamanthe.com, thibautlamanthe.fr',
   '# and their www variants. The path is preserved via $1.',
   'RewriteCond %{HTTP_HOST} !^www\\.studiotl\\.fr$ [NC]',
+  'RewriteRule ^(.*)$ https://www.studiotl.fr/$1 [R=301,L]',
+  '',
+  '# Force HTTPS on the canonical host. The X-Forwarded-Proto check avoids a',
+  '# redirect loop if TLS is terminated by a proxy in front of Apache.',
+  'RewriteCond %{HTTPS} off',
+  'RewriteCond %{HTTP:X-Forwarded-Proto} !https',
   'RewriteRule ^(.*)$ https://www.studiotl.fr/$1 [R=301,L]',
   '',
   '# Skip bots: they crawl URLs explicitly, hreflang guides them',
