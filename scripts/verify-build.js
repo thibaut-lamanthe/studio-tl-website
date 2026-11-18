@@ -4,6 +4,7 @@ const path = require('path');
 const requiredFiles = [
   path.join('dist', 'index.html'),
   path.join('dist', 'en', 'index.html'),
+  path.join('dist', 'confidentialite', 'index.html'),
   path.join('dist', '.htaccess'),
   path.join('dist', 'robots.txt'),
   path.join('dist', 'sitemap.xml'),
@@ -40,6 +41,15 @@ const contentChecks = [
     ]
   },
   {
+    file: path.join('dist', 'confidentialite', 'index.html'),
+    checks: [
+      '<html lang="fr">',
+      'Politique de confidentialité',
+      'href="https://www.studiotl.fr/confidentialite/"',
+      'Studio TL Ads'
+    ]
+  },
+  {
     file: path.join('dist', '.htaccess'),
     checks: ['RewriteCond %{HTTPS} off']
   },
@@ -51,7 +61,8 @@ const contentChecks = [
     file: path.join('dist', 'sitemap.xml'),
     checks: [
       '<loc>https://www.studiotl.fr/</loc>',
-      '<loc>https://www.studiotl.fr/en/</loc>'
+      '<loc>https://www.studiotl.fr/en/</loc>',
+      '<loc>https://www.studiotl.fr/confidentialite/</loc>'
     ]
   }
 ];

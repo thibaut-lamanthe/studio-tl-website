@@ -4,7 +4,8 @@ const { minify } = require('html-minifier-terser');
 
 const files = [
   path.join('dist', 'index.html'),
-  path.join('dist', 'en', 'index.html')
+  path.join('dist', 'en', 'index.html'),
+  path.join('dist', 'confidentialite', 'index.html')
 ];
 
 const options = {

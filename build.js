@@ -24,9 +24,14 @@ const SITE_URL = 'https://www.studiotl.fr';
 const SOURCE = 'index.html';
 const I18N = 'i18n.json';
 const DIST = 'dist';
+// Standalone French-only page served at /confidentialite/ (privacy policy,
+// also linked from the Google OAuth consent screen). Copied as-is: its asset
+// paths are already absolute.
+const PRIVACY_SOURCE = 'confidentialite.html';
 
 const source = fs.readFileSync(SOURCE, 'utf8');
 const i18n = JSON.parse(fs.readFileSync(I18N, 'utf8'));
+const privacy = fs.readFileSync(PRIVACY_SOURCE, 'utf8');
 
 // hreflang + canonical tags injected into the <head> of each version.
 // {{CANONICAL}} → '' for FR (= /), 'en/' for EN (= /en/)
@@ -152,6 +157,10 @@ const sitemap = [
   '    <xhtml:link rel="alternate" hreflang="en" href="' + SITE_URL + '/en/" />',
   '    <xhtml:link rel="alternate" hreflang="x-default" href="' + SITE_URL + '/" />',
   '  </url>',
+  '  <url>',
+  '    <loc>' + SITE_URL + '/confidentialite/</loc>',
+  '    <lastmod>' + today + '</lastmod>',
+  '  </url>',
   '</urlset>',
   ''
 ].join('\n');
@@ -161,6 +170,8 @@ fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(path.join(DIST, 'en'), { recursive: true });
 fs.writeFileSync(path.join(DIST, 'index.html'), frVersion);
 fs.writeFileSync(path.join(DIST, 'en', 'index.html'), enVersion);
+fs.mkdirSync(path.join(DIST, 'confidentialite'), { recursive: true });
+fs.writeFileSync(path.join(DIST, 'confidentialite', 'index.html'), privacy);
 fs.writeFileSync(path.join(DIST, '.htaccess'), htaccess);
 fs.writeFileSync(path.join(DIST, 'robots.txt'), robots);
 fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sitemap);
@@ -182,6 +193,7 @@ copyDir('assets', path.join(DIST, 'assets'));
 console.log('Build OK:');
 console.log('  - ' + path.join(DIST, 'index.html') + ' (FR)');
 console.log('  - ' + path.join(DIST, 'en', 'index.html') + ' (EN)');
+console.log('  - ' + path.join(DIST, 'confidentialite', 'index.html') + ' (privacy, FR)');
 console.log('  - ' + path.join(DIST, '.htaccess'));
 console.log('  - ' + path.join(DIST, 'robots.txt'));
 console.log('  - ' + path.join(DIST, 'sitemap.xml'));

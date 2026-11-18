@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Confidentialité — Studio TL</title>
+<meta name="description" content="Politique de confidentialité de Studio TL : site studiotl.fr et application Studio TL Ads (API Google Ads et Google Analytics)." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://www.studiotl.fr/confidentialite/" />
+
+<!-- Served from /confidentialite/ → asset paths are absolute (/assets/). -->
+<link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
+<link rel="icon" type="image/png" sizes="512x512" href="/assets/favicon-512.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+
+<link rel="preload" href="/assets/fonts/NeueMontreal-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/NeueMontreal-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/NeueMontreal-Bold.woff2" as="font" type="font/woff2" crossorigin>
+
+<!-- Same pre-paint theme logic as the home page: reuse the visitor's saved
+     choice (localStorage "studiotl-theme"), else follow the system. -->
+<script>
+  (function() {
+    try {
+      var stored = localStorage.getItem('studiotl-theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var mode = (stored === 'dark' || stored === 'light') ? stored : (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', mode);
+    } catch(e) {}
+  })();
+</script>
+
+<style>
+  @font-face {
+    font-family: "Neue Montreal";
+    src: url("/assets/fonts/NeueMontreal-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Neue Montreal";
+    src: url("/assets/fonts/NeueMontreal-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Neue Montreal";
+    src: url("/assets/fonts/NeueMontreal-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --bg: #ffffff;
+    --fg: #000000;
+    --muted: rgba(0, 0, 0, 0.6);
+    --rule: rgba(0, 0, 0, 0.12);
+    --pad-x: clamp(20px, 4vw, 48px);
+    --pad-y: clamp(20px, 3.2vw, 36px);
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --fg: #ffffff;
+    --muted: rgba(255, 255, 255, 0.6);
+    --rule: rgba(255, 255, 255, 0.16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      --bg: #000000;
+      --fg: #ffffff;
+      --muted: rgba(255, 255, 255, 0.6);
+      --rule: rgba(255, 255, 255, 0.16);
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Neue Montreal", ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.005em;
+  }
+  ::selection { background: var(--fg); color: var(--bg); }
+  a { color: inherit; text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    padding: var(--pad-y) var(--pad-x);
+  }
+
+  /* Brand mark (top-left): same rules as the home page header, as a link
+     back to the home page. */
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    color: var(--fg);
+    font-weight: 700;
+    padding: 12px;
+    margin-left: -12px;
+    margin-top: -12px;
+    text-decoration: none;
+  }
+  .brand .mark {
+    width: 25px;
+    height: 23px;
+    display: inline-flex;
+  }
+  .brand .mark svg { width: 100%; height: 100%; display: block; }
+  @media (max-width: 640px) {
+    .brand { font-size: 18px; }
+  }
+
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: clamp(24px, 6vw, 72px) var(--pad-x) clamp(48px, 8vw, 96px);
+  }
+  h1 {
+    font-weight: 500;
+    font-size: clamp(32px, 5vw, 44px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+  }
+  .updated { color: var(--muted); margin: 0 0 48px; }
+  h2 {
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+    margin: 48px 0 12px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+  }
+  p, ul { margin: 0 0 14px; }
+  ul { padding-left: 1.2em; }
+  li { margin-bottom: 6px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88em; }
+</style>
+</head>
+<body>
+  <!-- Hidden SVG definitions (logo mask), copied from index.html -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <mask id="logo-mask" maskUnits="userSpaceOnUse" x="-500" y="-500" width="1633.2" height="1583.04">
+        <rect x="-500" y="-500" width="1633.2" height="1583.04" fill="white"/>
+        <polygon points="527.65 315.29 527.71 44.09 105.62 220.38 105.65 356 211.14 311.98 211.14 583.04 316.6 539 316.64 267.96 422.14 223.93 422.14 494.92 633.19 403.1 633.2 271.21 527.65 315.29" fill="black"/>
+      </mask>
+    </defs>
+  </svg>
+
+  <header class="bar">
+    <a class="brand" href="/" aria-label="Studio TL — accueil">
+      <span>Studio</span>
+      <span class="mark" aria-hidden="true">
+        <svg class="logo-svg" viewBox="0 0 633.2 583.04" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <g mask="url(#logo-mask)">
+            <g class="face face-triangle"><polygon points="633.2 271.21 527.65 315.29 527.64 227.13 633.2 271.21"/></g>
+            <g class="face face-top"><polygon points="0 176.33 422.2 0 527.71 44.09 105.62 220.38"/></g>
+            <g class="face face-lip"><polygon points="105.65 356 0 311.87 0 176.33 105.62 220.38"/></g>
+            <g class="face face-tower"><polygon points="105.65 356 211.15 311.86 211.14 583.04 105.65 539.06"/></g>
+            <g class="face face-middle"><polygon points="316.67 450.91 316.64 267.81 422.15 223.74 422.14 494.92 316.67 450.91"/></g>
+          </g>
+        </svg>
+      </span>
+    </a>
+  </header>
+
+  <main>
+    <h1>Politique de confidentialité</h1>
+    <p class="updated">Dernière mise à jour : 18 novembre 2026</p>
+
+    <p>Cette page explique quelles données Studio TL traite, pourquoi et comment, pour le site <a href="https://www.studiotl.fr/">studiotl.fr</a> et pour l’application interne <strong>Studio TL Ads</strong>, qui accède aux API Google Ads et Google Analytics.</p>
+
+    <h2>Qui est responsable</h2>
+    <p>Studio TL — Thibaut Lamanthe, designer UI/UX et développeur freelance, Lyon (France).<br />
+    Contact : <a href="mailto:hello@studiotl.fr">hello@studiotl.fr</a></p>
+
+    <h2>Le site studiotl.fr</h2>
+    <ul>
+      <li>Aucun cookie, aucun outil de mesure d’audience, aucun traceur publicitaire, aucun formulaire.</li>
+      <li>Votre préférence de thème clair / sombre est enregistrée uniquement dans votre navigateur (stockage local <code>studiotl-theme</code>). Elle n’est jamais envoyée à Studio TL et vous pouvez l’effacer à tout moment.</li>
+      <li>Le site est hébergé par Infomaniak (Suisse). Comme tout hébergeur, Infomaniak peut conserver des journaux techniques (adresse IP, date, page demandée) pour la sécurité et le bon fonctionnement du service.</li>
+      <li>Si vous écrivez à <a href="mailto:hello@studiotl.fr">hello@studiotl.fr</a>, votre message sert uniquement à vous répondre. Il n’est ni revendu ni partagé.</li>
+    </ul>
+
+    <h2>L’application Studio TL Ads</h2>
+    <p>Studio TL Ads est un outil interne : il n’est pas proposé au public. Il permet à Studio TL de consulter, avec l’autorisation du titulaire du compte Google, les données des comptes Google Ads et des propriétés Google Analytics que Studio TL gère pour ses clients.</p>
+
+    <p><strong>Données consultées</strong></p>
+    <ul>
+      <li>Google Ads : identifiants et noms des comptes, structure et paramètres des campagnes, statistiques de performance (impressions, clics, coûts, conversions…).</li>
+      <li>Google Analytics : liste des comptes et propriétés, rapports d’audience et de conversions (données agrégées).</li>
+    </ul>
+
+    <p><strong>Utilisation</strong></p>
+    <ul>
+      <li>Ces données servent uniquement à analyser les performances et à préparer des recommandations et des rapports pour les clients concernés.</li>
+      <li>L’accès se fait en lecture seule : l’outil est configuré pour consulter les comptes, pas pour les modifier.</li>
+      <li>Pour produire ces analyses, les données consultées peuvent être traitées par des outils logiciels tiers utilisés par Studio TL, uniquement dans ce but.</li>
+      <li>Les données ne sont ni vendues, ni louées, ni partagées avec des tiers à des fins publicitaires.</li>
+    </ul>
+
+    <p><strong>Stockage et sécurité</strong></p>
+    <ul>
+      <li>L’autorisation Google (jeton OAuth) est conservée uniquement sur l’ordinateur de travail de Studio TL, dans un fichier accessible au seul utilisateur. Elle n’est stockée sur aucun serveur.</li>
+      <li>Les données sont consultées à la demande auprès des API Google ; Studio TL n’en constitue pas de base de données.</li>
+      <li>Vous pouvez retirer l’accès à tout moment depuis la page <a href="https://myaccount.google.com/permissions">Autorisations de votre compte Google</a>.</li>
+    </ul>
+
+    <p>L’utilisation et le transfert vers toute autre application des informations reçues des API Google par Studio TL Ads respectent les <a href="https://developers.google.com/terms/api-services-user-data-policy">Règles relatives aux données utilisateur des services d’API Google</a>, y compris les exigences d’utilisation limitée.</p>
+
+    <h2>Vos droits</h2>
+    <p>Conformément au RGPD, vous pouvez demander l’accès à vos données, leur rectification, leur effacement ou vous opposer à leur traitement en écrivant à <a href="mailto:hello@studiotl.fr">hello@studiotl.fr</a>. Vous pouvez aussi adresser une réclamation à la <a href="https://www.cnil.fr/">CNIL</a>.</p>
+  </main>
+</body>
+</html>
